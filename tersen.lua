@@ -2,10 +2,16 @@ inspect = require 'inspect'  -- DEBUG
 
 function build_lut(filename)
     local lut = {}
-    lut['Maud'] = "Md."
-    lut['Soren'] = "S."
-    lut['and'] = "&"
-    lut['store'] = "garp"
+    f = io.open(filename)
+    for directive in f:lines() do
+        source, dest = string.match(directive, "(.-)%s*=>%s*(.*)")
+        if source == nil or dest == nil then
+            print("WARNING: Invalid line - " .. directive)
+        else
+            lut[source] = dest
+        end
+    end
+    f:close()
     return lut
 end
 
