@@ -7,9 +7,12 @@ end
 function split_source(source)
     local elts = {}
     for i in string.gmatch(source, "[^,]*") do
-        table.insert(elts, trim(i))
+        if i == nil then
+            print("WARNING: Invalid source directive " .. source)
+        else
+            table.insert(elts, trim(i))
+        end
     end
-    print(inspect(elts))
     return #elts == 0 and {source} or elts
 end
 
@@ -22,7 +25,13 @@ function build_lut(filename)
             print("WARNING: Invalid line - " .. directive)
         else
             for _, inner_source in ipairs(split_source(source)) do
-                lut[inner_source] = dest
+                if lut[inner_source] ~= nil then
+                    print(string.format(
+                        "WARNING: Ignoring second mapping of source '%s': %s",
+                        inner_source, directive))
+                else
+                    lut[inner_source] = dest
+                end
             end
         end
     end
