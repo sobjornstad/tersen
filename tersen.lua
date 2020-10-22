@@ -1,15 +1,17 @@
 inspect = require 'inspect'  -- DEBUG
 
-lut = {}
-lut['Maud'] = "Md."
-lut['Soren'] = "S."
-lut['and'] = "&"
+function build_lut(filename)
+    local lut = {}
+    lut['Maud'] = "Md."
+    lut['Soren'] = "S."
+    lut['and'] = "&"
+    return lut
+end
 
-function tersen(text)
+function tersen(lut, text)
     local tersened = {}
-    local lookup = lut
     for word in string.gmatch(text, "%S+") do
-        prospective_repl = lookup[word]
+        prospective_repl = lut[word]
         if prospective_repl == nil then
             table.insert(tersened, word)
         else
@@ -19,4 +21,5 @@ function tersen(text)
     return table.concat(tersened, " ")
 end
 
+local lut = build_lut("tersen_dict.txt")
 print(tersen("Soren and Maud went to the store."))
