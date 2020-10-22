@@ -1,5 +1,18 @@
 inspect = require 'inspect'  -- DEBUG
 
+function trim(str)
+    return string.match(str, "^%s*(.-)%s*$")
+end
+
+function split_source(source)
+    local elts = {}
+    for i in string.gmatch(source, "[^,]*") do
+        table.insert(elts, trim(i))
+    end
+    print(inspect(elts))
+    return #elts == 0 and {source} or elts
+end
+
 function build_lut(filename)
     local lut = {}
     f = io.open(filename)
@@ -8,7 +21,9 @@ function build_lut(filename)
         if source == nil or dest == nil then
             print("WARNING: Invalid line - " .. directive)
         else
-            lut[source] = dest
+            for _, inner_source in ipairs(split_source(source)) do
+                lut[inner_source] = dest
+            end
         end
     end
     f:close()
@@ -39,4 +54,4 @@ function tersen(lut, text)
 end
 
 local lut = build_lut("tersen_dict.txt")
-print(tersen("Soren and Maud went to the store."))
+print(tersen(lut, "Soren and Maud went to the store."))
