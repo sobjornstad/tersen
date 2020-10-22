@@ -5,17 +5,28 @@ function build_lut(filename)
     lut['Maud'] = "Md."
     lut['Soren'] = "S."
     lut['and'] = "&"
+    lut['store'] = "garp"
     return lut
+end
+
+function munge_input(word)
+    initial_part, word_part, final_part = string.match(word, "(%W*)(%w+)(%W*)")
+    if initial_part == nil or word_part == nil or final_part == nil then
+        return nil, word, nil
+    else
+        return initial_part, word_part, final_part
+    end
 end
 
 function tersen(lut, text)
     local tersened = {}
     for word in string.gmatch(text, "%S+") do
-        prospective_repl = lut[word]
+        initial, munged_word, final = munge_input(word)
+        prospective_repl = lut[munged_word]
         if prospective_repl == nil then
             table.insert(tersened, word)
         else
-            table.insert(tersened, prospective_repl)
+            table.insert(tersened, initial .. prospective_repl .. final)
         end
     end
     return table.concat(tersened, " ")
