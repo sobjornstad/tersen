@@ -102,13 +102,22 @@ function lut_entries_from_item(lut, item)
         local exploded = explode_annot(inner_source, item.dest, item.annot)
         if exploded ~= nil then
             for exp_source, exp_dest in pairs(exploded) do
-                new_item = util.shallow_copy(item)
-                new_item.source = exp_source
-                new_item.dest = exp_dest
-                insert_mapping(lut, exp_source, exp_dest, new_item)
+                if exp_source ~= inner_source then
+                    -- If the same, an annotation resulted in an identical value
+                    -- to the root (e.g., 'read => ris @v' does this).
+                    -- We don't want a warning in this case!
+                    new_item = util.shallow_copy(item)
+                    new_item.source = exp_source
+                    new_item.dest = exp_dest
+                    insert_mapping(lut, exp_source, exp_dest, new_item)
+                end
             end
         end
     end
+end
+
+function is_comment(line)
+    return util.trim(line):sub(1, 1) == '#'
 end
 
 function build_lut(filename)
@@ -116,13 +125,15 @@ function build_lut(filename)
     idx = 1
     f = io.open(filename)
     for directive in f:lines() do
-        local source, dest, annot = string.match(directive, "(.-)%s*=>%s*([^@%s]*)(.*)")
-        if source == nil or dest == nil then
-            print(string.format("WARNING: Ignoring invalid line %d: %s", idx, directive))
-        else
-            item = {directive = directive, source = source, dest = dest,
-                    annot = util.trim(annot), line = idx}
-            lut_entries_from_item(lut, item)
+        if not is_nil_or_whitespace(directive) and not is_comment(directive) then
+            local source, dest, annot = string.match(directive, "(.-)%s*=>%s*([^@%s]*)(.*)")
+            if source == nil or dest == nil then
+                print(string.format("WARNING: Ignoring invalid line %d: %s", idx, directive))
+            else
+                item = {directive = directive, source = source, dest = dest,
+                        annot = util.trim(annot), line = idx}
+                lut_entries_from_item(lut, item)
+            end
         end
         idx = idx + 1
     end

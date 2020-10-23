@@ -32,8 +32,14 @@ function M.set(lst)
     return S
 end
 
+-- True if /s/ is a one-character string which is [aeiou].
 function M.is_vowel(s)
     return M.set{"a", "e", "i", "o", "u"}[s] ~= nil
+end
+
+-- True if s is nil, the empty string, or empty when trimmed.
+function is_nil_or_whitespace(s)
+    return s == nil or M.trim(s) == ''
 end
 
 return M
