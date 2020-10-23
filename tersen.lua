@@ -1,32 +1,6 @@
-inspect = require 'inspect'  -- DEBUG
+local inspect = require 'inspect'  -- DEBUG
+local util = require 'util'
 
-function trim(str)
-    return string.match(str, "^%s*(.-)%s*$")
-end
-
-function split_whitespace(str)
-    if str == nil then
-        return nil
-    end
-
-    local T = {}
-    for i in string.gmatch(str, "%S+") do
-        table.insert(T, i)
-    end
-    return T
-end
-
-function split_source(source)
-    local elts = {}
-    for i in string.gmatch(source, "[^,]*") do
-        if i == nil then
-            print("WARNING: Invalid source directive " .. source)
-        else
-            table.insert(elts, trim(i))
-        end
-    end
-    return #elts == 0 and {source} or elts
-end
 
 function explode_annot(source, dest, annot)
     local annot_type, annot_content = annot:match("^%s*@(%w+)%[([%w%s]+)%]")
@@ -73,7 +47,7 @@ function explode_annot(source, dest, annot)
                     [participle] = "u" .. dest}
         end,
     }
-    return type_switch[annot_type](split_whitespace(annot_content))
+    return type_switch[annot_type](util.split_whitespace(annot_content))
 end
 
 function insert_mapping(lut, source, dest, directive)
@@ -87,7 +61,7 @@ function insert_mapping(lut, source, dest, directive)
 end
 
 function lut_entries_from_parts(lut, directive, source, dest, annot)
-    for _, inner_source in ipairs(split_source(source)) do
+    for _, inner_source in ipairs(util.split_source(source)) do
         insert_mapping(lut, inner_source, dest, directive)
 
         local exploded = explode_annot(inner_source, dest, annot)
