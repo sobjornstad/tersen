@@ -127,7 +127,6 @@ function build_lut(filename)
         idx = idx + 1
     end
     f:close()
-    print(inspect(lut))
     return lut
 end
 
@@ -154,5 +153,7 @@ function tersen(lut, text)
     return table.concat(tersened, " ")
 end
 
-local lut = build_lut("tersen_dict.txt")
+local lut = build_lut("full_tersen.txt")
+--local lut = build_lut("tersen_dict.txt")
+print(inspect(lut))
 print(tersen(lut, "Soren and Maud went to the store and it was easy."))
