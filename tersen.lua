@@ -73,9 +73,14 @@ function insert_mapping(lut, source, dest, item)
             "WARNING: Ignoring remapping of source '%s' on line %d: %s",
             source, item.line, item.directive))
         print(string.format(
-            "  (note: previously mapped to '%s' on line %d: %s)",
+            "   note: previously mapped to '%s' on line %d: %s",
             lut[source].dest, lut[source].line, lut[source].directive))
     else
+        if #item.dest > #source then
+            print(string.format(
+                "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
+                item.dest, source, item.line, item.directive))
+        end
         lut[source] = item
     end
 end
@@ -166,5 +171,13 @@ end
 
 local lut = build_lut("full_tersen.txt")
 --local lut = build_lut("tersen_dict.txt")
-print(inspect(lut))
-print(tersen(lut, "Soren and Maud went to the store and it was easy."))
+--print(inspect(lut))
+input = io.open("/home/soren/random-thoughts.txt")
+for i in input:lines() do
+    print(tersen(lut, i))
+end
+--print(tersen(lut, "Soren and Maud went to the store and it was easy."))
+
+-- TODO: Hyphenated words appear to work incorrectly
+-- TODO: Handle capitalization better
+-- TODO: Multi-word phrases? Not sure if we even want to support them though.
