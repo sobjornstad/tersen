@@ -3,7 +3,7 @@ local util = require 'util'
 
 
 function explode_annot(source, dest, annot)
-    local annot_type, annot_content = annot:match("^%s*@(%w+)%[([%w%s]+)%]")
+    local annot_type, annot_content = annot:match("^@(%w+)%[([%w%s]+)%]")
     if annot_type == nil and annot_content == nil then
         annot_type = annot:match("^%s*@(%w+)$")
         if annot_type == nil then
@@ -52,23 +52,43 @@ end
 
 function insert_mapping(lut, source, dest, item)
     if lut[source] ~= nil then
-        print(inspect(item))
         print(string.format(
             "WARNING: Ignoring remapping of source '%s' on line %d: %s",
             source, item.line, item.directive))
+        print(string.format(
+            "  (note: previously mapped to '%s' on line %d: %s)",
+            lut[source].dest, lut[source].line, lut[source].directive))
     else
-        lut[source] = dest
+        lut[source] = item
     end
 end
 
+function source_parts(item)
+    local elts = {}
+    for i in string.gmatch(item.source, "[^,]*") do
+        if i == nil then
+            print(string.format(
+                "WARNING: Invalid source directive on line %d: %s",
+                item.line, item.source))
+        else
+            table.insert(elts, util.trim(i))
+        end
+    end
+    return #elts == 0 and {item.source} or elts
+end
+
+
 function lut_entries_from_item(lut, item)
-    for _, inner_source in ipairs(util.split_source(item.source)) do
+    for _, inner_source in ipairs(source_parts(item)) do
         insert_mapping(lut, inner_source, item.dest, item)
 
         local exploded = explode_annot(inner_source, item.dest, item.annot)
         if exploded ~= nil then
             for exp_source, exp_dest in pairs(exploded) do
-                insert_mapping(lut, exp_source, exp_dest, item)
+                new_item = util.shallow_copy(item)
+                new_item.source = exp_source
+                new_item.dest = exp_dest
+                insert_mapping(lut, exp_source, exp_dest, new_item)
             end
         end
     end
@@ -84,7 +104,7 @@ function build_lut(filename)
             print(string.format("WARNING: Ignoring invalid line %d: %s", idx, directive))
         else
             item = {directive = directive, source = source, dest = dest,
-                    annot = annot, line = idx}
+                    annot = util.trim(annot), line = idx}
             lut_entries_from_item(lut, item)
         end
         idx = idx + 1
@@ -111,11 +131,11 @@ function tersen(lut, text)
         if prospective_repl == nil then
             table.insert(tersened, word)
         else
-            table.insert(tersened, initial .. prospective_repl .. final)
+            table.insert(tersened, initial .. prospective_repl.dest .. final)
         end
     end
     return table.concat(tersened, " ")
 end
 
 local lut = build_lut("tersen_dict.txt")
-print(tersen(lut, "Soren and Maud went to the store."))
+print(tersen(lut, "Soren and Maud went to the store and it was easy."))

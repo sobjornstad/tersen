@@ -16,16 +16,12 @@ function M.split_whitespace(str)
     return T
 end
 
-function M.split_source(source)
-    local elts = {}
-    for i in string.gmatch(source, "[^,]*") do
-        if i == nil then
-            print("WARNING: Invalid source directive " .. source)
-        else
-            table.insert(elts, M.trim(i))
-        end
+function M.shallow_copy(t)
+    new_t = {}
+    for k, v in pairs(t) do
+        new_t[k] = v
     end
-    return #elts == 0 and {source} or elts
+    return new_t
 end
 
 return M
