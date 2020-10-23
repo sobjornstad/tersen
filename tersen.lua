@@ -66,6 +66,7 @@ function explode_annot(source, dest, annot)
             else
                 third, past, perfect, participle = table.unpack(annot_parts)
             end
+            -- If any are the same, they will be silently collapsed.
             return {[third] = dest,
                     [past] = "y" .. dest,
                     [perfect] = dest .. "d",
@@ -73,6 +74,29 @@ function explode_annot(source, dest, annot)
         end,
     }
     return type_switch[annot_type](split_whitespace(annot_content))
+end
+
+function insert_mapping(lut, source, dest, directive)
+    if lut[source] ~= nil then
+        print(string.format(
+            "WARNING: Ignoring remapping of source '%s': %s",
+            source, directive))
+    else
+        lut[source] = dest
+    end
+end
+
+function lut_entries_from_parts(lut, directive, source, dest, annot)
+    for _, inner_source in ipairs(split_source(source)) do
+        insert_mapping(lut, inner_source, dest, directive)
+
+        local exploded = explode_annot(inner_source, dest, annot)
+        if exploded ~= nil then
+            for exp_source, exp_dest in pairs(exploded) do
+                insert_mapping(lut, exp_source, exp_dest, directive)
+            end
+        end
+    end
 end
 
 function build_lut(filename)
@@ -83,22 +107,7 @@ function build_lut(filename)
         if source == nil or dest == nil then
             print("WARNING: Invalid line - " .. directive)
         else
-            for _, inner_source in ipairs(split_source(source)) do
-                if lut[inner_source] ~= nil then
-                    print(string.format(
-                        "WARNING: Ignoring remapping of source '%s': %s",
-                        inner_source, directive))
-                else
-                    lut[inner_source] = dest
-                end
-            end
-            -- TODO: Should probably be inner_source
-            local exploded = explode_annot(source, dest, annot)
-            if exploded ~= nil then
-                for exp_source, exp_dest in pairs(exploded) do
-                    lut[exp_source] = exp_dest
-                end
-            end
+            lut_entries_from_parts(lut, directive, source, dest, annot)
         end
     end
     f:close()
