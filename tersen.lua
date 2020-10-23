@@ -155,7 +155,7 @@ function munge_input(word)
     end
 end
 
-function tersen(lut, text)
+function tersen(lut, text, stats)
     local tersened = {}
     for word in string.gmatch(text, "%S+") do
         local initial, munged_word, final = munge_input(word)
@@ -166,7 +166,12 @@ function tersen(lut, text)
             table.insert(tersened, initial .. prospective_repl.dest .. final)
         end
     end
-    return table.concat(tersened, " ")
+    result = table.concat(tersened, " ")
+    if stats == nil then
+        return result
+    else
+        return result, #text, #result, #result/#text
+    end
 end
 
 local lut = build_lut("full_tersen.txt")
