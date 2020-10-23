@@ -24,4 +24,16 @@ function M.shallow_copy(t)
     return new_t
 end
 
+function M.set(lst)
+    S = {}
+    for _, i in ipairs(lst) do
+        S[i] = true
+    end
+    return S
+end
+
+function M.is_vowel(s)
+    return M.set{"a", "e", "i", "o", "u"}[s] ~= nil
+end
+
 return M
