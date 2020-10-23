@@ -50,24 +50,25 @@ function explode_annot(source, dest, annot)
     return type_switch[annot_type](util.split_whitespace(annot_content))
 end
 
-function insert_mapping(lut, source, dest, directive)
+function insert_mapping(lut, source, dest, item)
     if lut[source] ~= nil then
+        print(inspect(item))
         print(string.format(
-            "WARNING: Ignoring remapping of source '%s': %s",
-            source, directive))
+            "WARNING: Ignoring remapping of source '%s' on line %d: %s",
+            source, item.line, item.directive))
     else
         lut[source] = dest
     end
 end
 
-function lut_entries_from_parts(lut, directive, source, dest, annot)
-    for _, inner_source in ipairs(util.split_source(source)) do
-        insert_mapping(lut, inner_source, dest, directive)
+function lut_entries_from_item(lut, item)
+    for _, inner_source in ipairs(util.split_source(item.source)) do
+        insert_mapping(lut, inner_source, item.dest, item)
 
-        local exploded = explode_annot(inner_source, dest, annot)
+        local exploded = explode_annot(inner_source, item.dest, item.annot)
         if exploded ~= nil then
             for exp_source, exp_dest in pairs(exploded) do
-                insert_mapping(lut, exp_source, exp_dest, directive)
+                insert_mapping(lut, exp_source, exp_dest, item)
             end
         end
     end
@@ -75,14 +76,18 @@ end
 
 function build_lut(filename)
     local lut = {}
+    idx = 1
     f = io.open(filename)
     for directive in f:lines() do
         local source, dest, annot = string.match(directive, "(.-)%s*=>%s*([^@%s]*)(.*)")
         if source == nil or dest == nil then
-            print("WARNING: Invalid line - " .. directive)
+            print(string.format("WARNING: Ignoring invalid line %d: %s", idx, directive))
         else
-            lut_entries_from_parts(lut, directive, source, dest, annot)
+            item = {directive = directive, source = source, dest = dest,
+                    annot = annot, line = idx}
+            lut_entries_from_item(lut, item)
         end
+        idx = idx + 1
     end
     f:close()
     print(inspect(lut))
