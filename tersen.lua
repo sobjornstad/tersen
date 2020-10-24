@@ -128,6 +128,7 @@ end
 function source_parts(item)
     local elts = {}
     for i in string.gmatch(item.source, "[^,]*") do
+        print('*' .. i)
         if i == nil then
             print(string.format(
                 "WARNING: Invalid source directive on line %d: %s",
@@ -207,7 +208,7 @@ function greeken(str)
 end
 
 function munge_input(word)
-    initial_part, word_part, final_part = string.match(word, "(%W*)(%w+)(%W*)")
+    initial_part, word_part, final_part = string.match(word, "(%W*)([-'%w]+)(%W*)")
     if initial_part == nil or word_part == nil or final_part == nil then
         return nil, word, nil
     else
@@ -317,9 +318,9 @@ function tersen(lut, text, stats)
     end
 end
 
-local lut = build_lut("full_tersen.txt")
---local lut = build_lut("tersen_dict.txt")
---print(inspect(lut))
+--local lut = build_lut("full_tersen.txt")
+local lut = build_lut("tersen_dict.txt")
+print(inspect(lut))
 
 --input = io.open("/home/soren/random-thoughts.txt")
 --for i in input:lines() do
@@ -327,10 +328,10 @@ local lut = build_lut("full_tersen.txt")
 --end
 
 --print(tersen(lut, 'like to'))
-print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
+print(tersen(lut, "Red Soren Bjornstad and the red-clothed folk"))
+--print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
 --print(tersen(lut, "Soren and Maud Bethamer went to the store and it was EASY and Random."))
 
--- TODO: Hyphenated words appear to work incorrectly
 -- TODO: Handle capitalization better
 -- TODO: Multiple-word phrases handle medial punctuation incorrectly
 -- TODO: Unicode normalization?
