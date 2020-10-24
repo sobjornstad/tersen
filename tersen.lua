@@ -129,10 +129,14 @@ end
 function source_parts(item)
     local elts = {}
     for i in string.gmatch(item.source, "[^,]*") do
-        print('*' .. i)
         if i == nil then
             print(string.format(
                 "WARNING: Invalid source directive on line %d: %s",
+                item.line, item.source))
+        elseif not string.match(i, "^%s*[-'%w%s]+%s*$") then
+            print(string.format(
+                "WARNING: Source directive is not alphanumeric on line %d "
+                .. "and will be ignored: %s",
                 item.line, item.source))
         else
             table.insert(elts, util.trim(i))
@@ -320,8 +324,8 @@ function tersen(lut, text, stats)
     end
 end
 
-local lut = build_lut("full_tersen.txt")
---local lut = build_lut("tersen_dict.txt")
+--local lut = build_lut("full_tersen.txt")
+local lut = build_lut("tersen_dict.txt")
 --print(inspect(lut))
 
 --input = io.open("/home/soren/random-thoughts.txt")
