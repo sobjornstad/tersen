@@ -311,6 +311,11 @@ function tersen(lut, text, stats)
         else
             -- A match was found. Place the destination value, with surrounding
             -- initial/final punctuation, in the output list.
+            if item.dest:sub(-1, -1) == '.' and final:sub(1, 1) == '.' then
+                -- If the abbreviation ends with a '.', and there's already a '.' here,
+                -- whack one of them.
+                final = final:sub(2, -1)
+            end
             table.insert(tersened, initial .. normalize_case(item.dest, words[i]) .. final)
             i = i + advance
         end
@@ -324,21 +329,20 @@ function tersen(lut, text, stats)
     end
 end
 
---local lut = build_lut("full_tersen.txt")
-local lut = build_lut("tersen_dict.txt")
+local lut = build_lut("full_tersen.txt")
+--local lut = build_lut("tersen_dict.txt")
 --print(inspect(lut))
 
---input = io.open("/home/soren/random-thoughts.txt")
---for i in input:lines() do
---    print(tersen(lut, i))
---end
+input = io.open("/home/soren/random-thoughts.txt")
+for i in input:lines() do
+    print(tersen(lut, i))
+end
 
 --print(tersen(lut, 'like to'))
-print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts"))
+--print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts like Soren..."))
 --print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
 --print(tersen(lut, "Soren and Maud Bethamer went to the store and it was EASY and Random."))
 
 -- TODO: Multiple-word phrases handle medial punctuation incorrectly
 -- TODO: Unicode normalization?
 -- TODO: + and - to indicate what to do with remappings? (Overwrite, or ignore)
--- TODO: If the final character is . and the replacement ends in a ., ignore one

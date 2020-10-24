@@ -154,3 +154,15 @@ When replacing a match,
 
 Though these rules are not always perfect,
     for the most part, tersen will just “do the right thing” with case.
+
+
+## Special cases
+
+If a replacement ends with `.`
+    but a `.` already comes after the matched tokens in the source,
+    tersen will remove one dot;
+    this prevents sentences ending with `..`
+    because the last word was substituted with a period-ending abbreviation.
+(If the matched tokens had *more* than one dot after them
+    – for instance, if the sentence ended in an ellipsis –
+    only one of them will be removed.)
