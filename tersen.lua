@@ -104,20 +104,25 @@ function recursive_insert_word(insertion_point, remaining_words, item, level)
 end
 
 function insert_mapping(lut, source, dest, item)
-    if lut[source] ~= nil then
+    if #item.dest > #source then
+        print(string.format(
+            "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
+            item.dest, source, item.line, item.directive))
+    end
+
+    if lut[source] == nil then  -- entry doesn't exist yet
+        recursive_insert_word(lut, util.split_whitespace(source), item)
+    elseif lut[source].dest == nil then  -- a continuation-only entry exists
+        local existing_cont = lut[source].continuation
+        recursive_insert_word(lut, util.split_whitespace(source), item)
+        item.continuation = existing_cont
+    else  -- this source has already been mapped
         print(string.format(
             "WARNING: Ignoring remapping of source '%s' on line %d: %s",
             source, item.line, item.directive))
         print(string.format(
             "   note: previously mapped to '%s' on line %d: %s",
             lut[source].dest, lut[source].line, lut[source].directive))
-    else
-        if #item.dest > #source then
-            print(string.format(
-                "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
-                item.dest, source, item.line, item.directive))
-        end
-        recursive_insert_word(lut, util.split_whitespace(source), item)
     end
 end
 
@@ -291,3 +296,4 @@ print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy."))
 -- TODO: Handle capitalization better
 -- TODO: Multiple-word phrases handle medial punctuation incorrectly
 -- TODO: Unicode normalization?
+-- TODO: + and - to indicate what to do with remappings? (Overwrite, or ignore)
