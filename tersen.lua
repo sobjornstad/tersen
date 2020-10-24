@@ -211,33 +211,63 @@ function munge_input(word)
     end
 end
 
+-- Recursively consume tokens from the word list, finding the longest possible
+-- match in the lookup table beginning at word_base_index.
+function tersen_from(retrieve_point, words, word_base_index, word_at_index)
+    local initial, munged_word, final = munge_input(words[word_at_index])
+    if retrieve_point[munged_word] == nil then
+        -- No match in this branch.
+        return nil
+    elseif retrieve_point[munged_word].continuation == nil then
+        -- This is a match, and no longer matches exist.
+        return retrieve_point[munged_word],
+            initial,
+            final,
+            word_at_index - word_base_index + 1
+    else
+        -- This is a match, and longer matches may exist;
+        -- try to consume more tokens.
+        item, child_initial, child_final, child_advance = tersen_from(
+            retrieve_point[munged_word].continuation,
+            words,
+            word_base_index,
+            word_at_index + 1)
+        if item == nil then
+            -- No longer match was found. Use our match.
+            return retrieve_point[munged_word], initial, final,
+                word_at_index - word_base_index + 1
+        else
+            -- Longer match was found. Use child's match.
+            return item, initial, child_final, child_advance
+        end
+    end
+end
+
 function tersen(lut, text, stats)
+    -- Tokenize input into whitespace-separated words.
     local words = {}
     for word in string.gmatch(text, "%S+") do
         table.insert(words, word)
     end
 
+    -- Work down the list of tokens. At each iteration, greedily consume one
+    -- or more matching tokens and advance loop counter by the number of tokens
+    -- consumed.
     local tersened = {}
     i = 1
     while i <= #words do
-        local word = words[i]
-        local initial, munged_word, final = munge_input(word)
-        local prospective_repl = lut[munged_word]
-        if prospective_repl == nil then
-            table.insert(tersened, word)
-            --table.insert(tersened, greeken(word))
-        elseif prospective_repl.continuation ~= nil then
-            _, munge, final = munge_input(words[i+1])
-            if prospective_repl.continuation[munge] ~= nil then
-                continued_replacement = prospective_repl.continuation[munge].dest
-                table.insert(tersened, initial .. continued_replacement .. final)
-                i = i + 1
-            end
+        item, initial, final, advance = tersen_from(lut, words, i, i)
+        if item == nil then
+            -- No matches found starting at this word. Pass the original word
+            -- through unmodified. [Consider greeken()?]
+            table.insert(tersened, words[i])
+            i = i + 1
         else
-            print(inspect(prospective_repl))
-            table.insert(tersened, initial .. prospective_repl.dest .. final)
+            -- A match was found. Place the destination value, with surrounding
+            -- initial/final punctuation, in the output list.
+            table.insert(tersened, initial .. item.dest .. final)
+            i = i + advance
         end
-        i = i + 1
     end
 
     result = table.concat(tersened, " ")
@@ -250,14 +280,14 @@ end
 
 --local lut = build_lut("full_tersen.txt")
 local lut = build_lut("tersen_dict.txt")
---print(inspect(lut))
-input = io.open("/home/soren/random-thoughts.txt")
-for i in input:lines() do
-    print(tersen(lut, i))
-end
---print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy."))
+print(inspect(lut))
+----input = io.open("/home/soren/random-thoughts.txt")
+----for i in input:lines() do
+----    print(tersen(lut, i))
+----end
+print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy."))
 
 -- TODO: Hyphenated words appear to work incorrectly
 -- TODO: Handle capitalization better
--- TODO: Multi-word phrases using a "continuation" element in the hash
+-- TODO: Multiple-word phrases handle medial punctuation incorrectly
 -- TODO: Unicode normalization?
