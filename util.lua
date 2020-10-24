@@ -1,6 +1,7 @@
 local M = {}
 
 function M.trim(str)
+    if str == nil then return nil end
     return string.match(str, "^%s*(.-)%s*$")
 end
 
