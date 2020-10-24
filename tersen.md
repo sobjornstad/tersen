@@ -20,20 +20,22 @@ To tell tersen how you want to abbreviate things,
 A mapping consists of one or more source tokens (e.g., `Internet`)
     and a destination string (e.g., `I.N.`).
 When tersen encounters the source token(s) in its input,
-    it will replace that string with the destination string in its output.
+    it will replace them with the destination string in its output.
 
-Source tokens are alphanumeric strings separated by whitespace.
-Non-alphanumeric and non-whitespace characters,
-    such as punctuation,
-    are ignored for matching purposes but preserved in the output
+Tokens are strings consisting of alphanumeric characters, `-`, or `'`.
+Tokens are separated by whitespace.
+Other characters, such as punctuation,
+    may be at the beginning or end of the token;
+    when found in the input, these are ignored for matching purposes,
+    but are preserved in the output
     (e.g., with the mapping presented above,
      if `Internet,` was found in the source,
      `I.N.,` would appear in the destination).
-It is not possible to match punctuation in the source,
+Sources cannot match punctuation other than hyphens and apostrophes,
     so you cannot say, for instance, that `#&$%` maps to `Q`.
 
 A source may consist of more than one token.
-Tokens are matched one by one,
+Tokens in the input are matched one by one,
     but when tersen encounters a token that could begin multiple mappings,
     it looks ahead and picks the longest possible match.
 For instance,
@@ -50,8 +52,8 @@ While that gives up a small amount of possible compression,
     and makes replacement behavior more predictable
     when you’re trying to create a dictionary.
 
-A destination may consist of any string,
-    except one that contains the symbol `@`
+A destination may be any string,
+    except one that contains the at-sign (`@`)
     or has leading or trailing whitespace
     (tersen ignores whitespace when matching and replacing,
      but preserves it as best as possible in its output).
@@ -131,3 +133,24 @@ This creates `walk => gog`, `walks => gog`, `walked => gogd`, and `walking => ug
 Note that the past and the perfect, `walked` are the same;
     we don’t get a warning when this happens on an annotation,
     the perfect simply wins as a replacement.
+
+
+## Case
+
+Tersen is case-insensitive when matching,
+    to the extent that your system locale
+    can lowercase the characters you’re working with.
+When replacing a match,
+    tersen uses some simple rules to determine the case of the output:
+
+* If the destination, as defined in the tersen dictionary, is all-caps,
+  tersen assumes this is an acronym,
+  and the output will always be all-caps.
+* If the matched text itself was all-caps, its tersened output will be as well.
+* If the matched text was title case,
+  its tersened output will have its first character capitalized.
+  (TODO: Would be nice to make this proper title case.)
+* Otherwise, the output will be whatever case the replacement is.
+
+Though these rules are not always perfect,
+    for the most part, tersen will just “do the right thing” with case.

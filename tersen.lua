@@ -71,14 +71,15 @@ function recursive_insert_word(insertion_point, remaining_words, item, level)
     -- If there is only one word left, insert the item at the insertion point.
     -- If the source is a single word, this is all that will run and we don't
     -- get into the recursive part.
+    local this_word = string.lower(remaining_words[1])
     if #remaining_words == 1 then
-        if insertion_point[remaining_words[1]] == nil then
-            insertion_point[remaining_words[1]] = item
+        if insertion_point[this_word] == nil then
+            insertion_point[this_word] = item
         else
             -- Preserve existing continuation entry if it doesn't exist.
-            local existing_cont = insertion_point[remaining_words[1]].continuation
+            local existing_cont = insertion_point[this_word].continuation
             item.continuation = existing_cont
-            insertion_point[remaining_words[1]] = item
+            insertion_point[this_word] = item
         end
         return
     end
@@ -86,19 +87,19 @@ function recursive_insert_word(insertion_point, remaining_words, item, level)
     -- There is more than one word left. This means we need to enter a
     -- continuation on this table entry. If the table entry, or its
     -- continuation, doesn't exist, we need to create it.
-    if insertion_point[remaining_words[1]] == nil then
-        insertion_point[remaining_words[1]] = {continuation = {}}
-    elseif insertion_point[remaining_words[1]].continuation == nil then
-        insertion_point[remaining_words[1]].continuation = {}
+    if insertion_point[this_word] == nil then
+        insertion_point[this_word] = {continuation = {}}
+    elseif insertion_point[this_word].continuation == nil then
+        insertion_point[this_word].continuation = {}
     end
 
     -- Now the continuation becomes our insertion point and we try again.
     if level == nil then
         level = 1
     end
-    local cur_word = table.remove(remaining_words, 1)
+    table.remove(remaining_words, 1)
     return recursive_insert_word(
-        insertion_point[cur_word].continuation,
+        insertion_point[this_word].continuation,
         remaining_words, item, level + 1)
 end
 
@@ -249,8 +250,9 @@ function tersen_from(retrieve_point, words, word_base_index, word_at_index)
         -- If we are going beyond the end of our input, this is not a match.
         return nil
     end
+    local lowered_word = string.lower(words[word_at_index])
 
-    local initial, munged_word, final = munge_input(words[word_at_index])
+    local initial, munged_word, final = munge_input(lowered_word)
     local this_word = retrieve_point[munged_word]
     if this_word == nil then
         -- No match in this branch.
@@ -318,9 +320,9 @@ function tersen(lut, text, stats)
     end
 end
 
---local lut = build_lut("full_tersen.txt")
-local lut = build_lut("tersen_dict.txt")
-print(inspect(lut))
+local lut = build_lut("full_tersen.txt")
+--local lut = build_lut("tersen_dict.txt")
+--print(inspect(lut))
 
 --input = io.open("/home/soren/random-thoughts.txt")
 --for i in input:lines() do
@@ -328,11 +330,10 @@ print(inspect(lut))
 --end
 
 --print(tersen(lut, 'like to'))
-print(tersen(lut, "Red Soren Bjornstad and the red-clothed folk"))
+print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts"))
 --print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
 --print(tersen(lut, "Soren and Maud Bethamer went to the store and it was EASY and Random."))
 
--- TODO: Handle capitalization better
 -- TODO: Multiple-word phrases handle medial punctuation incorrectly
 -- TODO: Unicode normalization?
 -- TODO: + and - to indicate what to do with remappings? (Overwrite, or ignore)
