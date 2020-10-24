@@ -77,7 +77,7 @@ function recursive_insert_word(insertion_point, remaining_words, item, level)
         else
             -- Preserve existing continuation entry if it doesn't exist.
             -- TODO: Elsewhere a continuation-only entry should not raise a warning
-            existing_cont = insertion_point[remaining_words[1]].continuation
+            local existing_cont = insertion_point[remaining_words[1]].continuation
             item.continuation = existing_cont
             insertion_point[remaining_words[1]] = item
         end
@@ -97,14 +97,13 @@ function recursive_insert_word(insertion_point, remaining_words, item, level)
     if level == nil then
         level = 1
     end
-    cur_word = table.remove(remaining_words, 1)
+    local cur_word = table.remove(remaining_words, 1)
     return recursive_insert_word(
         insertion_point[cur_word].continuation,
         remaining_words, item, level + 1)
 end
 
 function insert_mapping(lut, source, dest, item)
-    print("Source: " .. source)
     if lut[source] ~= nil then
         print(string.format(
             "WARNING: Ignoring remapping of source '%s' on line %d: %s",
@@ -213,17 +212,34 @@ function munge_input(word)
 end
 
 function tersen(lut, text, stats)
-    local tersened = {}
+    local words = {}
     for word in string.gmatch(text, "%S+") do
+        table.insert(words, word)
+    end
+
+    local tersened = {}
+    i = 1
+    while i <= #words do
+        local word = words[i]
         local initial, munged_word, final = munge_input(word)
         local prospective_repl = lut[munged_word]
         if prospective_repl == nil then
             table.insert(tersened, word)
             --table.insert(tersened, greeken(word))
+        elseif prospective_repl.continuation ~= nil then
+            _, munge, final = munge_input(words[i+1])
+            if prospective_repl.continuation[munge] ~= nil then
+                continued_replacement = prospective_repl.continuation[munge].dest
+                table.insert(tersened, initial .. continued_replacement .. final)
+                i = i + 1
+            end
         else
+            print(inspect(prospective_repl))
             table.insert(tersened, initial .. prospective_repl.dest .. final)
         end
+        i = i + 1
     end
+
     result = table.concat(tersened, " ")
     if stats == nil then
         return result
@@ -234,12 +250,12 @@ end
 
 --local lut = build_lut("full_tersen.txt")
 local lut = build_lut("tersen_dict.txt")
-print(inspect(lut))
-----input = io.open("/home/soren/random-thoughts.txt")
-----for i in input:lines() do
-----    print(tersen(lut, i))
-----end
-print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy."))
+--print(inspect(lut))
+input = io.open("/home/soren/random-thoughts.txt")
+for i in input:lines() do
+    print(tersen(lut, i))
+end
+--print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy."))
 
 -- TODO: Hyphenated words appear to work incorrectly
 -- TODO: Handle capitalization better
