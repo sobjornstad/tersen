@@ -172,11 +172,11 @@ function build_lut(filename)
     f = io.open(filename)
     for directive in f:lines() do
         if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
-            local source, dest, annot = string.match(directive, "(.-)%s*=>%s*([^@%s]*)(.*)")
+            local source, dest, annot = string.match(directive, "(.-)%s*=>%s*([^@]*)(.*)")
             if source == nil or dest == nil then
                 print(string.format("WARNING: Ignoring invalid line %d: %s", idx, directive))
             else
-                item = {directive = directive, source = source, dest = dest,
+                item = {directive = directive, source = source, dest = util.trim(dest),
                         annot = util.trim(annot), line = idx}
                 lut_entries_from_item(lut, item)
             end
@@ -318,12 +318,15 @@ function tersen(lut, text, stats)
 end
 
 local lut = build_lut("full_tersen.txt")
-----local lut = build_lut("tersen_dict.txt")
-----print(inspect(lut))
+--local lut = build_lut("tersen_dict.txt")
+--print(inspect(lut))
+
 --input = io.open("/home/soren/random-thoughts.txt")
 --for i in input:lines() do
 --    print(tersen(lut, i))
 --end
+
+--print(tersen(lut, 'like to'))
 print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
 --print(tersen(lut, "Soren and Maud Bethamer went to the store and it was EASY and Random."))
 
