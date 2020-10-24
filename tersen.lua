@@ -146,6 +146,25 @@ function build_lut(filename)
     return lut
 end
 
+function greeken(str)
+    local gk_tab = {
+        ["ment"] = "μ",
+        ["tion"] = "σ",
+        ["com"] = "κ",
+        ["con"] = "κ",
+        ["ship"] = "π",
+        ["ing"] = "γ",
+        ["ally"] = "λ",
+        ["lly"] = "λ",
+        ["ly"] = "λ",
+    }
+    -- TODO: This needs to go in order in the actual implementation
+    for search, repl in pairs(gk_tab) do
+        str = string.gsub(str, search, repl)
+    end
+    return str
+end
+
 function munge_input(word)
     initial_part, word_part, final_part = string.match(word, "(%W*)(%w+)(%W*)")
     if initial_part == nil or word_part == nil or final_part == nil then
@@ -161,7 +180,7 @@ function tersen(lut, text, stats)
         local initial, munged_word, final = munge_input(word)
         local prospective_repl = lut[munged_word]
         if prospective_repl == nil then
-            table.insert(tersened, word)
+            table.insert(tersened, greeken(word))
         else
             table.insert(tersened, initial .. prospective_repl.dest .. final)
         end
@@ -185,4 +204,5 @@ end
 
 -- TODO: Hyphenated words appear to work incorrectly
 -- TODO: Handle capitalization better
--- TODO: Multi-word phrases? Not sure if we even want to support them though.
+-- TODO: Multi-word phrases using a "continuation" element in the hash
+-- TODO: Unicode normalization?
