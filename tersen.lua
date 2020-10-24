@@ -67,7 +67,44 @@ function explode_annot(source, dest, annot)
     return type_switch[annot_type](util.split_whitespace(annot_content))
 end
 
+function recursive_insert_word(insertion_point, remaining_words, item, level)
+    -- If there is only one word left, insert the item at the insertion point.
+    -- If the source is a single word, this is all that will run and we don't
+    -- get into the recursive part.
+    if #remaining_words == 1 then
+        if insertion_point[remaining_words[1]] == nil then
+            insertion_point[remaining_words[1]] = item
+        else
+            -- Preserve existing continuation entry if it doesn't exist.
+            -- TODO: Elsewhere a continuation-only entry should not raise a warning
+            existing_cont = insertion_point[remaining_words[1]].continuation
+            item.continuation = existing_cont
+            insertion_point[remaining_words[1]] = item
+        end
+        return
+    end
+
+    -- There is more than one word left. This means we need to enter a
+    -- continuation on this table entry. If the table entry, or its
+    -- continuation, doesn't exist, we need to create it.
+    if insertion_point[remaining_words[1]] == nil then
+        insertion_point[remaining_words[1]] = {continuation = {}}
+    elseif insertion_point[remaining_words[1]].continuation == nil then
+        insertion_point[remaining_words[1]].continuation = {}
+    end
+
+    -- Now the continuation becomes our insertion point and we try again.
+    if level == nil then
+        level = 1
+    end
+    cur_word = table.remove(remaining_words, 1)
+    return recursive_insert_word(
+        insertion_point[cur_word].continuation,
+        remaining_words, item, level + 1)
+end
+
 function insert_mapping(lut, source, dest, item)
+    print("Source: " .. source)
     if lut[source] ~= nil then
         print(string.format(
             "WARNING: Ignoring remapping of source '%s' on line %d: %s",
@@ -81,7 +118,7 @@ function insert_mapping(lut, source, dest, item)
                 "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
                 item.dest, source, item.line, item.directive))
         end
-        lut[source] = item
+        recursive_insert_word(lut, util.split_whitespace(source), item)
     end
 end
 
@@ -102,7 +139,8 @@ end
 
 function lut_entries_from_item(lut, item)
     for _, inner_source in ipairs(source_parts(item)) do
-        insert_mapping(lut, inner_source, item.dest, item)
+        local my_item = util.shallow_copy(item)
+        insert_mapping(lut, inner_source, item.dest, my_item)
 
         local exploded = explode_annot(inner_source, item.dest, item.annot)
         if exploded ~= nil then
@@ -180,7 +218,8 @@ function tersen(lut, text, stats)
         local initial, munged_word, final = munge_input(word)
         local prospective_repl = lut[munged_word]
         if prospective_repl == nil then
-            table.insert(tersened, greeken(word))
+            table.insert(tersened, word)
+            --table.insert(tersened, greeken(word))
         else
             table.insert(tersened, initial .. prospective_repl.dest .. final)
         end
@@ -193,14 +232,14 @@ function tersen(lut, text, stats)
     end
 end
 
-local lut = build_lut("full_tersen.txt")
---local lut = build_lut("tersen_dict.txt")
---print(inspect(lut))
-input = io.open("/home/soren/random-thoughts.txt")
-for i in input:lines() do
-    print(tersen(lut, i))
-end
---print(tersen(lut, "Soren and Maud went to the store and it was easy."))
+--local lut = build_lut("full_tersen.txt")
+local lut = build_lut("tersen_dict.txt")
+print(inspect(lut))
+----input = io.open("/home/soren/random-thoughts.txt")
+----for i in input:lines() do
+----    print(tersen(lut, i))
+----end
+print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy."))
 
 -- TODO: Hyphenated words appear to work incorrectly
 -- TODO: Handle capitalization better
