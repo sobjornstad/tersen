@@ -219,31 +219,40 @@ end
 -- Recursively consume tokens from the word list, finding the longest possible
 -- match in the lookup table beginning at word_base_index.
 function tersen_from(retrieve_point, words, word_base_index, word_at_index)
+    if words[word_at_index] == nil then
+        -- If we are going beyond the end of our input, this is not a match.
+        return nil
+    end
+
     local initial, munged_word, final = munge_input(words[word_at_index])
-    if retrieve_point[munged_word] == nil then
+    local this_word = retrieve_point[munged_word]
+    if this_word == nil then
         -- No match in this branch.
         return nil
-    elseif retrieve_point[munged_word].continuation == nil then
+    elseif this_word.continuation == nil then
         -- This is a match, and no longer matches exist.
-        return retrieve_point[munged_word],
+        return this_word,
             initial,
             final,
             word_at_index - word_base_index + 1
     else
-        -- This is a match, and longer matches may exist;
-        -- try to consume more tokens.
+        -- Longer matches may exist; try to consume more tokens.
         item, child_initial, child_final, child_advance = tersen_from(
-            retrieve_point[munged_word].continuation,
+            this_word.continuation,
             words,
             word_base_index,
             word_at_index + 1)
-        if item == nil then
-            -- No longer match was found. Use our match.
-            return retrieve_point[munged_word], initial, final,
-                word_at_index - word_base_index + 1
-        else
+
+        if item ~= nil then
             -- Longer match was found. Use child's match.
             return item, initial, child_final, child_advance
+        elseif this_word.dest then
+            -- No longer match was found. Use our match.
+            return this_word, initial, final, word_at_index - word_base_index + 1
+        else
+            -- No longer match was found, and our match is a continuation-only
+            -- entry. Ergo, no match in this branch. :(
+            return nil
         end
     end
 end
@@ -270,6 +279,7 @@ function tersen(lut, text, stats)
         else
             -- A match was found. Place the destination value, with surrounding
             -- initial/final punctuation, in the output list.
+            print(inspect(item))
             table.insert(tersened, initial .. item.dest .. final)
             i = i + advance
         end
@@ -290,7 +300,7 @@ print(inspect(lut))
 ----for i in input:lines() do
 ----    print(tersen(lut, i))
 ----end
-print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy."))
+print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy and Random."))
 
 -- TODO: Hyphenated words appear to work incorrectly
 -- TODO: Handle capitalization better
