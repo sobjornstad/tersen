@@ -76,7 +76,6 @@ function recursive_insert_word(insertion_point, remaining_words, item, level)
             insertion_point[remaining_words[1]] = item
         else
             -- Preserve existing continuation entry if it doesn't exist.
-            -- TODO: Elsewhere a continuation-only entry should not raise a warning
             local existing_cont = insertion_point[remaining_words[1]].continuation
             item.continuation = existing_cont
             insertion_point[remaining_words[1]] = item
@@ -172,7 +171,7 @@ function build_lut(filename)
     idx = 1
     f = io.open(filename)
     for directive in f:lines() do
-        if not is_nil_or_whitespace(directive) and not is_comment(directive) then
+        if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
             local source, dest, annot = string.match(directive, "(.-)%s*=>%s*([^@%s]*)(.*)")
             if source == nil or dest == nil then
                 print(string.format("WARNING: Ignoring invalid line %d: %s", idx, directive))
@@ -213,6 +212,32 @@ function munge_input(word)
         return nil, word, nil
     else
         return initial_part, word_part, final_part
+    end
+end
+
+-- Given a replacement and source, decide what casing to use for the replacement.
+function normalize_case(new_word, original_word)
+    if util.is_nil_or_whitespace(new_word) then
+        -- If new_word is emptyish, just return whatever's there.
+        return new_word
+    elseif util.is_upper(original_word) or util.is_upper(new_word) then
+        -- If the original word is uppercase OR the replacement is uppercase
+        -- (indicating the replacement is an acronym), use uppercase.
+        return string.upper(new_word)
+    elseif util.is_title(original_word) then
+        -- Otherwise, if the original word is title case, presumably because it
+        -- was at the start of a sentence or part of a name, use title case.
+        local initial, first_alnum, final = new_word:match("^(.-)(%w)(.*)$")
+        if first_alnum == nil then
+            -- Special case: no alphanumeric characters at all in replacement.
+            -- Just return the replacement.
+            return new_word
+        else
+            return initial .. first_alnum:upper() .. final
+        end
+    else
+        -- In all other situations, use the case of the replacement.
+        return new_word
     end
 end
 
@@ -279,8 +304,7 @@ function tersen(lut, text, stats)
         else
             -- A match was found. Place the destination value, with surrounding
             -- initial/final punctuation, in the output list.
-            print(inspect(item))
-            table.insert(tersened, initial .. item.dest .. final)
+            table.insert(tersened, initial .. normalize_case(item.dest, words[i]) .. final)
             i = i + advance
         end
     end
@@ -293,17 +317,19 @@ function tersen(lut, text, stats)
     end
 end
 
---local lut = build_lut("full_tersen.txt")
-local lut = build_lut("tersen_dict.txt")
-print(inspect(lut))
-----input = io.open("/home/soren/random-thoughts.txt")
-----for i in input:lines() do
-----    print(tersen(lut, i))
-----end
-print(tersen(lut, "Soren and Maud Bethamer went to the store and it was easy and Random."))
+local lut = build_lut("full_tersen.txt")
+----local lut = build_lut("tersen_dict.txt")
+----print(inspect(lut))
+--input = io.open("/home/soren/random-thoughts.txt")
+--for i in input:lines() do
+--    print(tersen(lut, i))
+--end
+print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
+--print(tersen(lut, "Soren and Maud Bethamer went to the store and it was EASY and Random."))
 
 -- TODO: Hyphenated words appear to work incorrectly
 -- TODO: Handle capitalization better
 -- TODO: Multiple-word phrases handle medial punctuation incorrectly
 -- TODO: Unicode normalization?
 -- TODO: + and - to indicate what to do with remappings? (Overwrite, or ignore)
+-- TODO: If the final character is . and the replacement ends in a ., ignore one
