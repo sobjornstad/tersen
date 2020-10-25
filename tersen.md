@@ -52,7 +52,9 @@ The “longest possible match” is the one with the most tokens;
     it keeps tersen fast and simple
     and makes replacement behavior more predictable.)
 
-A source cannot contain punctuation other than hyphens or apostrophes,
+!!! TODO: Define “inner token” and “outer token”
+
+A source cannot contain punctuation other than hyphens or apostrophes (curly or straight),
     so you cannot have a source of `#&$%` or `St. Paul`.
 If such a source is found,
     a warning will be printed and that mapping will be ignored.
@@ -109,14 +111,21 @@ You can do this by separating them with commas:
 
     source1, source2 => destination
 
-You can also use *annotations*
-    to automatically generate several sources and destinations
-    when several can be inferred based on a single mapping.
-The following section documents the built-in annotation format,
-    which is geared towards Dutton Speedwords;
+You can also apply *annotations* to any dictionary line.
+Annotations are Lua functions
+    that transform the source and destination in an arbitrary way.
+An annotation can output one mapping or many mappings;
+    for instance, you might wish to add both the singular form
+    and a plural form of a word using an annotation.
+Several annotations are provided with tersen,
+    and you can easily write your own.
+
+The following section documents the built-in annotations,
+    which are geared towards Dutton Speedwords;
     you can customize the annotation functions
     for whatever source language and abbreviation language you’re using,
     and even add your own.
+An annotation looks like this:
 
     tree => bo @n
 
@@ -130,7 +139,7 @@ The `n` annotation indicates that this is a noun
     `z` being the plural suffix in Speedwords.
 
 If the plural form doesn’t consist of the word plus an *s*,
-    you can specify one or more space-separated *arguments* to the annotation.
+    you can specify one or more *arguments* to the annotation.
 For the built-in noun form, there is only one argument, the plural form:
 
     leaf => fol @n[leaves]
@@ -153,6 +162,18 @@ This creates `walk => gog`, `walks => gog`, `walked => gogd`, and `walking => ug
 Note that the past and the perfect, `walked` are the same;
     we don’t get a warning when this happens on an annotation,
     the perfect simply wins as a replacement.
+
+As you can see, arguments are typically placed in square brackets
+    and separated by spaces.
+If the arguments need to be multiple words,
+    you can use an alternate form where each argument
+    is in its own set of curly braces:
+
+    log in => lgn @v{logs in}{logged in}{logged in}{logging in}
+
+Annotation arguments can contain any non-newline character except
+    whitespace and closing square brackets (in the square-bracketed form)
+    or closing curly braces (in the curly-braced form).
 
 
 ## Case
@@ -186,3 +207,31 @@ If a replacement ends with `.`
 (If the matched tokens had *more* than one dot after them
     – for instance, if the sentence ended in an ellipsis –
     only one of them will be removed.)
+
+
+## Writing annotation functions
+
+Annotations are Lua functions in the `M` table in the `annot.lua` file.
+The name of the function
+    is the name used to access the annotation in the tersen dictionary,
+    and may contain letters, numbers, and underscores
+    (but may not begin with a digit).
+The function takes three arguments:
+    the source listed in the tersen dictionary,
+    the destination listed in the tersen dictionary,
+    and a list of arguments to the annotation (or nil if there were no arguments).
+It returns a table of mappings,
+    the keys being sources and the values being destinations.
+
+If there are multiple comma-separated sources,
+    the annotation function is called separately for each source.
+
+Here’s a simple example, the function backing `@apos`,
+    which ensures that any apostrophes in the source value
+    get dictionary entries for both curly apostrophes and straight apostrophes.
+
+    function M.apos (source, dest, args)
+        local straight = string.gsub(source, "'", "’")
+        local curly = string.gsub(source, "’", "'")
+        return {[straight] = dest, [curly] = dest}
+    end

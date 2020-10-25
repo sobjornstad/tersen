@@ -4,18 +4,29 @@ local annot_mod = require 'annot'
 
 
 function explode_annot(source, dest, annot)
-    local annot_type, annot_content = annot:match("^@(%w+)%[([%w%s]+)%]")
-    if annot_type == nil and annot_content == nil then
-        -- perhaps an annotation without arguments
-        annot_type = annot:match("^%s*@(%w+)$")
-        if annot_type == nil then
-            -- invalid annotation
-            -- TODO: There should be a warning
-            return nil
-        end
+    local annot_name, annot_parmstart = annot:match("^@([%w_]+)([%[%{]?)")
+    if annot_name == nil then
+        -- invalid annotation, TODO raise warning
+        return nil
     end
 
-    return annot_mod[annot_type](source, dest, util.split_whitespace(annot_content))
+    local annot_parms
+    if util.is_nil_or_whitespace(annot_parmstart) then
+        annot_parms = nil
+    elseif annot_parmstart == '[' then
+        annot_parms = util.split_whitespace(annot:match("^@[%w_]+%[(.*)%]"))
+    elseif annot_parmstart == '{' then
+        local parm_string = annot:match("^@[%w_]+%{(.*)}"):gsub('}{', '\0')
+        annot_parms = {}
+        for i in string.gmatch(parm_string, "[^\0]+") do
+            table.insert(annot_parms, i)
+        end
+    else
+        error("Oops, this should never happen: annot_parmstart was '"
+              .. annot_parmstart .. "'")
+    end
+
+    return annot_mod[annot_name](source, dest, annot_parms)
 end
 
 function recursive_insert_word(insertion_point, remaining_words, item, level)
@@ -299,4 +310,5 @@ print(inspect(lut))
 -- TODO: Convert to title case properly if there is punctuation earlier; ideally each word too
 -- TODO: Newline handling
 -- TODO: ? and ! for tracing
--- TODO: Apostrophe normalization
+-- TODO: Allow applying multiple annotations
+-- TODO: Annotation argument handling cleanup

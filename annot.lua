@@ -31,6 +31,7 @@ function M.n (source, dest, args)
     else
         plural = args[1]
     end
+    print(plural)
     return {[plural] = dest .. "z"}
 end
 
