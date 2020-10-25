@@ -56,4 +56,10 @@ function M.v (source, dest, args)
             [participle] = "u" .. dest}
 end
 
+function M.apos (source, dest, args)
+    local straight = string.gsub(source, "'", "’")
+    local curly = string.gsub(source, "’", "'")
+    return {[straight] = dest, [curly] = dest}
+end
+
 return M

@@ -6,7 +6,7 @@ local annot_mod = require 'annot'
 function explode_annot(source, dest, annot)
     local annot_type, annot_content = annot:match("^@(%w+)%[([%w%s]+)%]")
     if annot_type == nil and annot_content == nil then
-        -- annotation without arguments
+        -- perhaps an annotation without arguments
         annot_type = annot:match("^%s*@(%w+)$")
         if annot_type == nil then
             -- invalid annotation

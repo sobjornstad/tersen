@@ -5,6 +5,7 @@ function M.trim(str)
     return string.match(str, "^%s*(.-)%s*$")
 end
 
+-- Return a list of whitespace-separated tokens. If input is nil, return nil.
 function M.split_whitespace(str)
     if str == nil then
         return nil
