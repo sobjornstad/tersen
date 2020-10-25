@@ -140,13 +140,25 @@ function build_lut(filename)
     f = io.open(filename)
     for directive in f:lines() do
         if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
-            local source, dest, annot = string.match(directive, "(.-)%s*=>%s*([^@]*)(.*)")
+            local flags, source, dest, annot = directive:match(
+                    "([-%+%?%!]?)(.-)%s*=>%s*([^@]*)(.*)")
             if source == nil or dest == nil then
                 print(string.format("WARNING: Ignoring invalid line %d: %s", idx, directive))
             else
-                item = {directive = directive, source = source, dest = util.trim(dest),
-                        annot = util.trim(annot), line = idx}
-                lut_entries_from_item(lut, item)
+                lut_entries_from_item(lut, {
+                    directive = directive,
+                    flags     = flags,
+                    source    = source,
+                    dest      = util.trim(dest),
+                    annot     = util.trim(annot),
+                    line      = idx
+                })
+                if flags == '!' then
+                    print(string.format(
+                        "WARNING: Cut occurred on line %d, terminating.",
+                        idx))
+                    break
+                end
             end
         end
         idx = idx + 1
@@ -309,6 +321,6 @@ print(inspect(lut))
 -- TODO: + and - to indicate what to do with remappings? (Overwrite, or ignore)
 -- TODO: Convert to title case properly if there is punctuation earlier; ideally each word too
 -- TODO: Newline handling
--- TODO: ? and ! for tracing
+-- TODO: ? for tracing
 -- TODO: Allow applying multiple annotations
 -- TODO: Annotation argument handling cleanup
