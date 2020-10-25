@@ -1,70 +1,21 @@
 local inspect = require 'inspect'  -- DEBUG
 local util = require 'util'
+local annot_mod = require 'annot'
 
 
 function explode_annot(source, dest, annot)
     local annot_type, annot_content = annot:match("^@(%w+)%[([%w%s]+)%]")
     if annot_type == nil and annot_content == nil then
+        -- annotation without arguments
         annot_type = annot:match("^%s*@(%w+)$")
         if annot_type == nil then
+            -- invalid annotation
+            -- TODO: There should be a warning
             return nil
         end
     end
 
-    local type_switch = {
-        adj = function(annot_parts)
-            local comparative, superlative
-            if annot_parts == nil then
-                if string.sub(source, -1, -1) == "e" then
-                    comparative = source .. "r"
-                    superlative = source .. "st"
-                else
-                    comparative = source .. "er"
-                    superlative = source .. "est"
-                end
-            else
-                comparative, superlative = table.unpack(annot_parts)
-            end
-            return {[comparative] = "me" .. dest, [superlative] = "my" .. dest}
-        end,
-        n = function(annot_parts)
-            local plural
-            if annot_parts == nil then
-                if string.sub(source, -1, -1) == "s" then
-                    plural = source .. "es"
-                elseif string.sub(source, -1, -1) == "y" then
-                    plural = source.sub(source, 1, -2) .. "ies"
-                else
-                    plural = source .. "s"
-                end
-            else
-                plural = annot_parts[1]
-            end
-            return {[plural] = dest .. "z"}
-        end,
-        v = function(annot_parts)
-            local third, past, perfect, participle
-            if annot_parts == nil then
-                if util.is_vowel(source:sub(-1, -1)) then
-                    past = source .. "d"
-                    participle = source:sub(1, -2) .. "ing"
-                else
-                    past = source .. "ed"
-                    participle = source .. "ing"
-                end
-                perfect = past
-                third = source .. "s"
-            else
-                third, past, perfect, participle = table.unpack(annot_parts)
-            end
-            -- If any are the same, they will be silently collapsed.
-            return {[third] = dest,
-                    [past] = "y" .. dest,
-                    [perfect] = dest .. "d",
-                    [participle] = "u" .. dest}
-        end,
-    }
-    return type_switch[annot_type](util.split_whitespace(annot_content))
+    return annot_mod[annot_type](source, dest, util.split_whitespace(annot_content))
 end
 
 function recursive_insert_word(insertion_point, remaining_words, item, level)
@@ -329,14 +280,14 @@ function tersen(lut, text, stats)
     end
 end
 
-local lut = build_lut("full_tersen.txt")
---local lut = build_lut("tersen_dict.txt")
---print(inspect(lut))
+--local lut = build_lut("full_tersen.txt")
+local lut = build_lut("tersen_dict.txt")
+print(inspect(lut))
 
-input = io.open("/home/soren/random-thoughts.txt")
-for i in input:lines() do
-    print(tersen(lut, i))
-end
+--input = io.open("/home/soren/random-thoughts.txt")
+--for i in input:lines() do
+--    print(tersen(lut, i))
+--end
 
 --print(tersen(lut, "St. Olaf College"))
 --print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts like Soren..."))
