@@ -22,6 +22,8 @@ A mapping consists of one or more source tokens (e.g., `Internet`)
 When tersen encounters the source token(s) in its input,
     it will replace them with the destination string in its output.
 
+### Tokens and sources
+
 Tokens are strings consisting of alphanumeric characters, `-`, or `'`.
 Tokens are separated by whitespace.
 Other characters, such as punctuation,
@@ -31,12 +33,10 @@ Other characters, such as punctuation,
     (e.g., with the mapping presented above,
      if `Internet,` was found in the source,
      `I.N.,` would appear in the destination).
-Sources cannot match punctuation other than hyphens and apostrophes,
-    so you cannot say, for instance, that `#&$%` maps to `Q`.
 
 A source may consist of more than one token.
-Tokens in the input are matched one by one,
-    but when tersen encounters a token that could begin multiple mappings,
+When tersen encounters an input token
+    that could match the source of multiple mappings,
     it looks ahead and picks the longest possible match.
 For instance,
     if your dictionary contains both `Internet` and `Internet Protocol`,
@@ -45,23 +45,43 @@ For instance,
 The “longest possible match” is the one with the most tokens;
     it is not necessarily the way of dividing tokens
     that produces the shortest output.
-tersen will also never backtrack over a replacement it has already made,
+(tersen is *greedy*;
+    it will never backtrack over a replacement it has already made,
     even if another division of tokens could produce a shorter output.
-While that gives up a small amount of possible compression,
+ While that gives up a small amount of possible compression,
     it keeps tersen fast and simple
-    and makes replacement behavior more predictable
-    when you’re trying to create a dictionary.
+    and makes replacement behavior more predictable.)
+
+A source cannot contain punctuation other than hyphens or apostrophes,
+    so you cannot have a source of `#&$%` or `St. Paul`.
+If such a source is found,
+    a warning will be printed and that mapping will be ignored.
+*However*, you can sometimes get around this;
+    if a multi-word phrase matches input
+    when ignoring the punctuation in the input,
+    the replacement will still be made
+    and any medial punctuation will disappear.
+For instance, if you have a mapping from `St Olaf` to `STO`,
+    and the text `St. Olaf` is found in the input,
+    it will be replaced with `STO`.
+One could imagine a case where this would do the wrong thing,
+    such as “222 Somewhere St., Olaf City, CA”,
+    but in general this is unlikely
+    (and it will always be possible to fool tersen in some edge cases!).
+
+Only one mapping may be present in the dictionary for each `source`.
+If the same source is mapped more than once,
+    the first entry wins,
+    and tersen will print a warning.
+
+
+### Destinations
 
 A destination may be any string,
     except one that contains the at-sign (`@`)
     or has leading or trailing whitespace
     (tersen ignores whitespace when matching and replacing,
      but preserves it as best as possible in its output).
-
-Only one mapping may be present in the dictionary for each `source`.
-If the same source is mapped more than once,
-    the first entry wins,
-    and tersen will print a warning.
 
 If a destination is longer than its corresponding source,
     tersen will print a warning but still use the mapping.

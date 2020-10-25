@@ -133,7 +133,7 @@ function source_parts(item)
             print(string.format(
                 "WARNING: Invalid source directive on line %d: %s",
                 item.line, item.source))
-        elseif not string.match(i, "^%s*[-'%w%s]+%s*$") then
+        elseif not string.match(i, "^%s*[-'’%w%s]+%s*$") then
             print(string.format(
                 "WARNING: Source directive is not alphanumeric on line %d "
                 .. "and will be ignored: %s",
@@ -213,7 +213,7 @@ function greeken(str)
 end
 
 function munge_input(word)
-    initial_part, word_part, final_part = string.match(word, "(%W*)([-'%w]+)(.*)")
+    initial_part, word_part, final_part = string.match(word, "(%W*)([-'’%w]+)(.*)")
     if initial_part == nil or word_part == nil or final_part == nil then
         return nil, word, nil
     else
@@ -329,20 +329,23 @@ function tersen(lut, text, stats)
     end
 end
 
---local lut = build_lut("full_tersen.txt")
-local lut = build_lut("tersen_dict.txt")
+local lut = build_lut("full_tersen.txt")
+--local lut = build_lut("tersen_dict.txt")
 --print(inspect(lut))
 
---input = io.open("/home/soren/random-thoughts.txt")
---for i in input:lines() do
---    print(tersen(lut, i))
---end
+input = io.open("/home/soren/random-thoughts.txt")
+for i in input:lines() do
+    print(tersen(lut, i))
+end
 
-print(tersen(lut, "if(LogLess(500))"))
+--print(tersen(lut, "St. Olaf College"))
 --print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts like Soren..."))
 --print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
 --print(tersen(lut, "Soren and Maud Bethamer went to the store and it was EASY and Random."))
 
--- TODO: Multiple-word phrases handle medial punctuation incorrectly (St. Olaf?)
 -- TODO: Unicode normalization?
 -- TODO: + and - to indicate what to do with remappings? (Overwrite, or ignore)
+-- TODO: Convert to title case properly if there is punctuation earlier; ideally each word too
+-- TODO: Newline handling
+-- TODO: ? and ! for tracing
+-- TODO: Apostrophe normalization
