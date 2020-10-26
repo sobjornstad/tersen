@@ -72,19 +72,22 @@ function insert_mapping(lut, source, dest, item)
             item.dest, source, item.line, item.directive))
     end
 
-    if lut[source] == nil then  -- entry doesn't exist yet
+    local existing_item = lut[source:lower()]
+    if existing_item == nil then  -- entry doesn't exist yet
         recursive_insert_word(lut, util.split_whitespace(source), item)
-    elseif lut[source].dest == nil then  -- a continuation-only entry exists
-        local existing_cont = lut[source].continuation
+    elseif existing_item.dest == nil then  -- a continuation-only entry exists
+        local existing_cont = existing_item.continuation
         recursive_insert_word(lut, util.split_whitespace(source), item)
         item.continuation = existing_cont
     else  -- this source has already been mapped
-        print(string.format(
-            "WARNING: Ignoring remapping of source '%s' on line %d: %s",
-            source, item.line, item.directive))
-        print(string.format(
-            "   note: previously mapped to '%s' on line %d: %s",
-            lut[source].dest, lut[source].line, lut[source].directive))
+        if not item.flags:match("-") then
+            print(string.format(
+                "WARNING: Ignoring remapping of source '%s' on line %d: %s",
+                source, item.line, item.directive))
+            print(string.format(
+                "   note: previously mapped to '%s' on line %d: %s",
+                existing_item.dest, existing_item.line, existing_item.directive))
+        end
     end
 end
 
@@ -355,12 +358,9 @@ local lut = build_lut("tersen_dict.txt")
 --print(tersen(lut, "St. Olaf College"))
 --print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts like Soren..."))
 --print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
---print(tersen(lut, "Soren and Maud Bethamer went to the store and it was EASY and Random."))
+print(tersen(lut, "Soren and Maud went to the store and it was EASY and Random."))
 
 -- TODO: Unicode normalization?
--- TODO: + and - to indicate what to do with remappings? (Overwrite, or ignore)
 -- TODO: Convert to title case properly if there is punctuation earlier; ideally each word too
 -- TODO: Newline handling
--- TODO: ? for tracing
 -- TODO: Allow applying multiple annotations
--- TODO: Annotation argument handling cleanup
