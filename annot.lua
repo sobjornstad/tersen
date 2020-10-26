@@ -62,4 +62,30 @@ function M.apos (source, dest, args)
     return {[straight] = dest, [curly] = dest}
 end
 
+function M.numbers (source, dest, args)
+    local ones  = {one = 1, two = 2, three = 3, four = 4, five = 5, six = 6,
+                   seven = 7, eight = 8, nine = 9}
+    local small = {ten = 10, eleven = 11, twelve = 12, thirteen = 13,
+                   fourteen = 14, fifteen = 15, sixteen = 16, seventeen = 17,
+                   eighteen = 18, nineteen = 19}
+    local tens  = {twenty = 20, thirty = 30, forty = 40, fifty = 50,
+                   sixty = 60, seventy = 70, eighty = 80, ninety = 90}
+
+    local ninety_nine_blackbirds_sitting_in_a_tree = {}
+    for k, v in pairs(ones) do
+        ninety_nine_blackbirds_sitting_in_a_tree[k] = tostring(v)
+    end
+    for k, v in pairs(small) do
+        ninety_nine_blackbirds_sitting_in_a_tree[k] = tostring(v)
+    end
+    for k, v in pairs(tens) do
+        ninety_nine_blackbirds_sitting_in_a_tree[k] = tostring(v)
+        for kk, vv in pairs(ones) do
+            ninety_nine_blackbirds_sitting_in_a_tree[k .. '-' .. kk] = tostring(v + vv)
+        end
+    end
+
+    return ninety_nine_blackbirds_sitting_in_a_tree
+end
+
 return M

@@ -236,6 +236,21 @@ Here’s a simple example, the function backing `@apos`,
         return {[straight] = dest, [curly] = dest}
     end
 
+It’s possible to use an annotation to programmatically generate some entries
+    without using the dictionary entry at all – 
+    there’s no requirement that all the arguments to the function be used.
+For instance, the default `@numbers` annotation
+    adds entries for the words “one” through “ninety-nine”
+    and their corresponding digit representations.
+To include the output of such an annotation in your dictionary,
+    simply put a dummy source and replacement on a line
+    and attach the annotation, like so:
+
+    Numbers as Words => Digits @numbers
+
+You can trace this line to see the effect if you like,
+    by placing a `?` in front of it (see *Flags*, below).
+
 
 ## Flags
 
