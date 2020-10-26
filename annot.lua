@@ -18,20 +18,28 @@ function M.adj (source, dest, args)
     return {[comparative] = "me" .. dest, [superlative] = "my" .. dest}
 end
 
-function M.n (source, dest, args)
-    local plural
+function pluralize_source (source, args)
     if args == nil then
         if string.sub(source, -1, -1) == "s" then
-            plural = source .. "es"
+            return source .. "es"
         elseif string.sub(source, -1, -1) == "y" then
-            plural = source.sub(source, 1, -2) .. "ies"
+            return source.sub(source, 1, -2) .. "ies"
         else
-            plural = source .. "s"
+            return source .. "s"
         end
     else
-        plural = args[1]
+        return args[1]
     end
+end
+
+function M.n (source, dest, args)
+    local plural = pluralize_source(source, args)
     return {[plural] = dest .. "z"}
+end
+
+function M.n_acro (source, dest, args)
+    plural = pluralize_source(source, args)
+    return {[plural] = dest .. "s"}
 end
 
 function M.v (source, dest, args)

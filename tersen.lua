@@ -214,15 +214,16 @@ function greeken(str)
     local gk_tab = {
         ["ment"] = "μ",
         ["tion"] = "σ",
-        ["com"] = "κ",
-        ["con"] = "κ",
+        ["c?co[mn]"] = "κ",
         ["ship"] = "π",
+        ["f?f[iu]ll?"] = "Φ",
+        ["ness?"] = "ε",
         ["ing"] = "γ",
-        ["ally"] = "λ",
-        ["lly"] = "λ",
-        ["ly"] = "λ",
+        ["all?"] = "α",
+        ["a?l?ly"] = "λ",
+        ["[ai]ble"] = "β",
+        ["[ai]bility"] = "βt",
     }
-    -- TODO: This needs to go in order in the actual implementation
     for search, repl in pairs(gk_tab) do
         str = string.gsub(str, search, repl)
     end
@@ -323,7 +324,7 @@ function tersen(lut, text, stats)
         if item == nil then
             -- No matches found starting at this word. Pass the original word
             -- through unmodified. [Consider greeken()?]
-            table.insert(tersened, words[i])
+            table.insert(tersened, greeken(words[i]))
             i = i + 1
         else
             -- A match was found. Place the destination value, with surrounding
@@ -346,21 +347,31 @@ function tersen(lut, text, stats)
     end
 end
 
---local lut = build_lut("full_tersen.txt")
-local lut = build_lut("tersen_dict.txt")
+local lut = build_lut("full_tersen.txt")
+--local lut = build_lut("tersen_dict.txt")
 --print(inspect(lut))
 
---input = io.open("/home/soren/random-thoughts.txt")
---for i in input:lines() do
---    print(tersen(lut, i))
---end
+input = io.open("/home/soren/random-thoughts.txt")
+orig_tot, new_tot = 0, 0
+for i in input:lines() do
+    result, orig, new = tersen(lut, i, true)
+    print(result)
+    orig_tot = orig_tot + orig
+    new_tot = new_tot + new
+end
+
+print("Stats:", orig_tot, new_tot, new_tot / orig_tot)
 
 --print(tersen(lut, "St. Olaf College"))
 --print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts like Soren..."))
 --print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
-print(tersen(lut, "Soren and Maud went to the store and it was EASY and Random."))
+--print(tersen(lut, "Soren and Maud went to the store and it was EASY and Random."))
 
 -- TODO: Unicode normalization?
 -- TODO: Convert to title case properly if there is punctuation earlier; ideally each word too
 -- TODO: Newline handling
 -- TODO: Allow applying multiple annotations
+-- TODO: Force case sensitivity?
+-- TODO: Improve warnings (print to stderr, give more details)
+-- TODO: Move out Greekening into a hook of some kind (and other extensibility points?)
+-- TODO: Call out which words weren't covered and their frequency (if you have a good corpus, this can help you learn to abbreviate!)
