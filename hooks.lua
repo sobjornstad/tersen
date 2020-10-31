@@ -123,12 +123,13 @@ Parameters:
   @dest    The replacement of the mapping (longer than source)
   @item    The lookup-table value for this destination,
            containing properties like the original source directive and line number.
+           You should not alter this parameter.
 
 Return:
     A source, destination pair for the mapping you want to use,
     or nil if you want to skip including this item in the lookup table entirely.
 --]
-function M.mapping_verbosens_text(source, dest)
+function M.mapping_verbosens_text(source, dest, item)
     return source, dest
 end
 --]]

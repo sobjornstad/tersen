@@ -29,5 +29,3 @@ print("Stats:", orig_tot, new_tot, new_tot / orig_tot)
 -- TODO: Allow applying multiple annotations
 -- TODO: Force case sensitivity?
 -- TODO: Improve warnings (print to stderr, give more details)
-
--- TODO: insert_mapping may not work correctly when the destination is set differently for different annotation returns...it appears to use the raw item for that.

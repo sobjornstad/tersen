@@ -128,39 +128,45 @@ local function recursive_insert_word(insertion_point, remaining_words, item, lev
 end
 
 
--- Add a mapping from /source/ to /dest/ in the lookup table.
-local function insert_mapping(lut, source, dest, item)
-    if #item.dest > #source then
+-- If the destination is longer than the source, warn, or take whatever other action
+-- is defined in the appropriate hook.
+local function handle_longer_destination(item)
+    if #item.dest > #item.source then
         local new_source, new_dest = hook
-            .try_invoke("mapping_verbosens_text", source, item.dest, item)
+            .try_invoke("mapping_verbosens_text", item.source, item.dest, item)
             :or_execute(function()
                 print(string.format(
                     "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
-                    item.dest, source, item.line, item.directive))
-                return source, item.dest
+                    item.dest, item.source, item.line, item.directive))
+                return item.source, item.dest
             end)
         if new_source == nil or new_dest == nil then
             return
         else
-            -- TODO: We probably should not be altering item;
-            -- not using the dest param is probably a bug anyway;
-            -- we should extract this if-statement bit into a new function then.
-            source, item.dest = new_source, new_dest
+            item.source, item.dest = new_source, new_dest
         end
     end
+end
 
-    local existing_item = lut[source:lower()]
+
+-- Add a mapping from /source/ to /dest/ in the lookup table.
+local function insert_mapping(lut, item)
+    handle_longer_destination(item)
+
+    local existing_item = lut[item.source:lower()]
     if existing_item == nil then  -- entry doesn't exist yet
-        recursive_insert_word(lut, util.split_whitespace(source), item)
+        recursive_insert_word(lut, util.split_whitespace(item.source), item)
+
     elseif existing_item.dest == nil then  -- a continuation-only entry exists
         local existing_cont = existing_item.continuation
-        recursive_insert_word(lut, util.split_whitespace(source), item)
+        recursive_insert_word(lut, util.split_whitespace(item.source), item)
         item.continuation = existing_cont
+
     else  -- this source has already been mapped
         if not item.flags:match("-") then
             print(string.format(
                 "WARNING: Ignoring remapping of source '%s' on line %d: %s",
-                source, item.line, item.directive))
+                item.source, item.line, item.directive))
             print(string.format(
                 "   note: previously mapped to '%s' on line %d: %s",
                 existing_item.dest, existing_item.line, existing_item.directive))
@@ -176,7 +182,7 @@ local function lut_entries_from_explosion(lut, item, inner_source, exploded)
         local new_item = util.shallow_copy(item)
         new_item.source = exploded_source
         new_item.dest = exploded_dest
-        insert_mapping(lut, exploded_source, exploded_dest, new_item)
+        insert_mapping(lut, new_item)
     end
 end
 
@@ -186,8 +192,9 @@ end
 local function lut_entries_from_item(lut, item)
     for _, inner_source in ipairs(source_parts(item)) do
         if util.is_nil_or_whitespace(item.annot) then
-            local my_item = util.shallow_copy(item)
-            insert_mapping(lut, inner_source, item.dest, my_item)
+            local inner_item = util.shallow_copy(item)
+            inner_item.source = inner_source
+            insert_mapping(lut, inner_item)
         else
             local exploded = explode_annot(inner_source, item.dest, item.annot)
             lut_entries_from_explosion(lut, item, inner_source, exploded)
