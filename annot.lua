@@ -1,6 +1,6 @@
 local util = require 'util'
 
-M = {}
+local M = {}
 
 function M.adj (source, dest, args)
     local comparative, superlative

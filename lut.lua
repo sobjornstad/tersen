@@ -2,7 +2,7 @@ local inspect = require 'inspect'  -- DEBUG
 local util = require 'util'
 local annotation_functions = require 'annot'
 
-M = {}
+local M = {}
 
 
 -- A tersen dictionary line is a comment if its first non-whitespace character is #.

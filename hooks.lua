@@ -1,4 +1,4 @@
-M = {}
+local M = {}
 
 local function greeken(str)
     local gk_tab = {
@@ -22,7 +22,7 @@ local function greeken(str)
 end
 
 
-function M.no_match (token)
+function M.no_match(token)
     return greeken(token)
 end
 
