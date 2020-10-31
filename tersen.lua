@@ -181,3 +181,6 @@ end
 -- TODO: Improve warnings (print to stderr, give more details)
 -- TODO: Add further extensibility points
 -- TODO: Run either the missing words OR the tersen, and not both
+
+-- TODO: Annotations incorrectly add the non-annotated part without passing through
+-- TODO: insert_mapping may not work correctly when the destination is set differently for different annotation returns...it appears to use the raw item for that.

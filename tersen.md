@@ -213,7 +213,7 @@ If a replacement ends with `.`
 Annotations are Lua functions in the `M` table in the `annot.lua` file.
 The name of the function
     is the name used to access the annotation in the tersen dictionary,
-    and may contain letters, numbers, and underscores
+    and may contain lowercase letters, numbers, and underscores
     (but may not begin with a digit).
 The function takes three arguments:
     the source listed in the tersen dictionary,
