@@ -23,10 +23,3 @@ for i in input:lines() do
 end
 
 print("Stats:", orig_tot, new_tot, new_tot / orig_tot)
-
--- TODO: Unicode normalization?
--- TODO: Convert to title case properly if there is punctuation earlier; ideally each word too
--- TODO: Newline handling
--- TODO: Allow applying multiple annotations
--- TODO: Force case sensitivity?
--- TODO: Improve warnings (print to stderr, give more details)

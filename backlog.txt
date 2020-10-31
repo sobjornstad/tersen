@@ -1,0 +1,11 @@
+* Title case conversion isn't really done:
+  - Doesn't work if the word starts with punctuation
+  - Only uppercases the first word
+* Newline handling options for cmdline
+* Improve warnings (print to stderr, give more details)
+
+Maybe:
+
+* Unicode normalization?
+* Allow applying multiple annotations to one item (they would be cascaded through)
+  (If someone really needed this, they could write a function that did it!)
