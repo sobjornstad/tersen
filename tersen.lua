@@ -27,7 +27,15 @@ function explode_annot(source, dest, annot)
               .. annot_parmstart .. "'")
     end
 
-    return annot_mod[annot_name](source, dest, annot_parms)
+    annot_fn = annot_mod[annot_name:lower()]
+    if annot_fn == nil then
+        print(string.format(
+            "WARNING: Attempt to call a nonexistent annotation '%s'. This line will be skipped.",
+            annot))
+        return {}
+    else
+        return annot_fn(source, dest, annot_parms)
+    end
 end
 
 function recursive_insert_word(insertion_point, remaining_words, item, level)
