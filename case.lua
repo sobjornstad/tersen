@@ -1,4 +1,4 @@
-local hooks = require 'hooks'
+local hook = require 'hook_exec'
 local util = require 'util'
 
 local M = {}
@@ -71,8 +71,8 @@ end
 
 -- Given a replacement and source, decide what casing to use for the replacement.
 function M.normalize(new_word, original_word)
-    if hooks.normalize_case ~= nil then
-        local hooked_case = hooks.normalize_case(new_word, original_word)
+    if hook.defined("normalize_case") ~= nil then
+        local hooked_case = hook.invoke("normalize_case", new_word, original_word)
         if hooked_case ~= nil then
             return hooked_case
         end
@@ -80,6 +80,5 @@ function M.normalize(new_word, original_word)
 
     return default_normalize_case(new_word, original_word)
 end
-
 
 return M

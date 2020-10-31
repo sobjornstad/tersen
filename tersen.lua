@@ -1,5 +1,5 @@
 local case = require 'case'
-local hooks = require 'hooks'
+local hook = require 'hook_exec'
 local util = require 'util'
 
 local M = {}
@@ -120,12 +120,8 @@ function M.tersen(lut, text)
     local tersened = {}
     for source_word, item, initial, final in tersened_words(lut, text) do
         if item == nil then
-            local tersened_word
-            if hooks.no_match ~= nil then
-                tersened_word = hooks.no_match(source_word)
-            else
-                tersened_word = source_word
-            end
+            local tersened_word = hook.try_invoke("no_match", source_word)
+                :or_return(source_word)
             table.insert(tersened, tersened_word)
         else
             if item.dest:sub(-1, -1) == '.' and final:sub(1, 1) == '.' then

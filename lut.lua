@@ -1,6 +1,7 @@
+local annotation_functions = require 'annot'
+local hook = require 'hook_exec'
 local inspect = require 'inspect'  -- DEBUG
 local util = require 'util'
-local annotation_functions = require 'annot'
 
 local M = {}
 
@@ -255,6 +256,8 @@ function M.trace(lut)
             print(v)
         end
     end
+
+    hook.invoke("trace", lut)
 end
 
 
@@ -276,7 +279,8 @@ function M.build_from_dict_file(filename)
     end
     f:close()
 
-    return lut
+    return hook.try_invoke("post_build_lut", lut)
+        :or_return(lut)
 end
 
 return M
