@@ -1,6 +1,7 @@
 local inspect = require 'inspect'  -- DEBUG
 local util = require 'util'
 local annot_mod = require 'annot'
+local hooks_mod = require 'hooks'
 
 
 function explode_annot(source, dest, annot)
@@ -210,26 +211,6 @@ function build_lut(filename)
     return lut
 end
 
-function greeken(str)
-    local gk_tab = {
-        ["ment"] = "μ",
-        ["tion"] = "σ",
-        ["c?co[mn]"] = "κ",
-        ["ship"] = "π",
-        ["f?f[iu]ll?"] = "Φ",
-        ["ness?"] = "ε",
-        ["ing"] = "γ",
-        ["all?"] = "α",
-        ["a?l?ly"] = "λ",
-        ["[ai]ble"] = "β",
-        ["[ai]bility"] = "βt",
-    }
-    for search, repl in pairs(gk_tab) do
-        str = string.gsub(str, search, repl)
-    end
-    return str
-end
-
 function munge_input(word)
     initial_part, word_part, final_part = string.match(word, "(%W*)([-'’%w]+)(.*)")
     if initial_part == nil or word_part == nil or final_part == nil then
@@ -322,9 +303,22 @@ function tersen(lut, text, stats)
     while i <= #words do
         item, initial, final, advance = tersen_from(lut, words, i, i)
         if item == nil then
-            -- No matches found starting at this word. Pass the original word
-            -- through unmodified. [Consider greeken()?]
-            table.insert(tersened, greeken(words[i]))
+            -- No matches found starting at this word.
+            -- Insert into dict of nonexistent words.
+            tw_munged = words[i]:lower()
+            if unmatched_tokens[tw_munged] ~= nil then
+                unmatched_tokens[tw_munged] = unmatched_tokens[tw_munged] + 1
+            else
+                unmatched_tokens[tw_munged] = 1
+            end
+
+            local tersened_word
+            if hooks_mod.no_match ~= nil then
+                tersened_word = hooks_mod.no_match(words[i])
+            else
+                tersened_word = words[i]
+            end
+            table.insert(tersened, tersened_word)
             i = i + 1
         else
             -- A match was found. Place the destination value, with surrounding
@@ -373,5 +367,5 @@ print("Stats:", orig_tot, new_tot, new_tot / orig_tot)
 -- TODO: Allow applying multiple annotations
 -- TODO: Force case sensitivity?
 -- TODO: Improve warnings (print to stderr, give more details)
--- TODO: Move out Greekening into a hook of some kind (and other extensibility points?)
--- TODO: Call out which words weren't covered and their frequency (if you have a good corpus, this can help you learn to abbreviate!)
+-- TODO: Add further extensibility points
+-- TODO: Run either the missing words OR the tersen, and not both
