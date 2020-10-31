@@ -1,8 +1,7 @@
-local inspect = require 'inspect'  -- DEBUG
 local util = require 'util'
 local hooks = require 'hooks'
-local lut_mod = require 'lut'
 
+M = {}
 
 -- Split a token into its inner portion and its initial/final portions.
 local function delineate(word)
@@ -127,7 +126,8 @@ local function tersened_words(lut, text)
 end
 
 
-local function print_unmatched_tokens(unmatched_frequency_table)
+-- Print unmatched tokens compiled by unmatched_in_corpus() to stdout.
+function M.print_unmatched_tokens(unmatched_frequency_table)
     local token_mapping = {}
     for k, v in pairs(unmatched_frequency_table) do
         table.insert(token_mapping, {k, v})
@@ -144,7 +144,7 @@ end
 
 -- Return a table from words to frequency, containing all words in /text/ that
 -- didn't match an entry in the lookup table /lut/.
-local function unmatched_in_corpus(lut, text)
+function M.unmatched_in_corpus(lut, text)
     local unmatched = {}
     for source_word, item in tersened_words(lut, text) do
         if item == nil then
@@ -161,7 +161,9 @@ local function unmatched_in_corpus(lut, text)
 end
 
 
-local function tersen(lut, text)
+-- Return a tersened version of the string /text/, tersening with reference to the
+-- lookup table /lut/.
+function M.tersen(lut, text)
     local tersened = {}
     for source_word, item, initial, final in tersened_words(lut, text) do
         if item == nil then
@@ -187,39 +189,4 @@ local function tersen(lut, text)
     return result, #text, #result, #result/#text
 end
 
-
-local lut = lut_mod.build_from_dict_file("full_tersen.txt")
-lut_mod.trace(lut)
---local myfile = io.open("/home/soren/random-thoughts.txt")
---local unmatched = unmatched_in_corpus(lut, myfile:read("*a"))
---print_unmatched_tokens(unmatched)
---os.exit(1)
---local lut = build_lut("tersen_dict.txt")
---print(inspect(lut))
-
-local input = io.open("/home/soren/random-thoughts.txt")
-local orig_tot, new_tot = 0, 0
-for i in input:lines() do
-    local result, orig, new = tersen(lut, i)
-    print(result)
-    orig_tot = orig_tot + orig
-    new_tot = new_tot + new
-end
-
-print("Stats:", orig_tot, new_tot, new_tot / orig_tot)
-
---print(tersen(lut, "St. Olaf College"))
---print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts like Soren..."))
---print(tersen(lut, '#11336. "After I listen to this song, I like to immediately listen to this song again." --YouTube comment, found by Mama'))
---print(tersen(lut, "Soren and Maud went to the store and it was EASY and Random."))
-
--- TODO: Unicode normalization?
--- TODO: Convert to title case properly if there is punctuation earlier; ideally each word too
--- TODO: Newline handling
--- TODO: Allow applying multiple annotations
--- TODO: Force case sensitivity?
--- TODO: Improve warnings (print to stderr, give more details)
--- TODO: Add further extensibility points
-
--- TODO: Annotations incorrectly add the non-annotated part without passing through
--- TODO: insert_mapping may not work correctly when the destination is set differently for different annotation returns...it appears to use the raw item for that.
+return M

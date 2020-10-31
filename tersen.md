@@ -300,3 +300,30 @@ Any number of flags can be used together,
   and the singular form of the noun `lead` are identical,
   but you might want to include their base forms
   and attach noun and verb annotations to them in the dictionary.
+
+
+## Performance
+
+tersen is designed to be fast enough
+    that performance should not normally be a concern.
+However, depending on what features you take advantage of,
+    what kind of speed you require,
+    and how much input you intend to pass to tersen,
+    you may want to consider a few things.
+
+Building the lookup table is almost instantaneous in most cases,
+    even with annotations.
+A 700-line tersen dictionary with liberal use of moderately complex annotations
+    and multiple sources takes under 10ms to build on my computer
+    (NB: my development machine is unusually fast for a desktop).
+Thus, the main factor is usually how large your input is;
+    on the same machine and a large corpus,
+    tersen works at about 0.45 seconds per megabyte of input.
+(You can manage faster if you don't use any hooks.)
+
+A significant secondary factor is the use of hooks, particularly no_match.
+Since `no_match` runs against every word in the source text which doesn't match
+    -- which even in a good abbreviation table will usually be a large fraction of them --
+    this is a very "hot" function
+     and almost anything you can do to speed it up will have a noticeable impact.
+`normalize_case` has similar concerns.
