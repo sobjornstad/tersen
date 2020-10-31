@@ -1,6 +1,6 @@
 M = {}
 
-function greeken(str)
+local function greeken(str)
     local gk_tab = {
         ["ment"] = "μ",
         ["tion"] = "σ",

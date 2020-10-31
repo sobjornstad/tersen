@@ -1,9 +1,11 @@
+local inspect = require 'inspect'  -- DEBUG
 local util = require 'util'
 local annot_mod = require 'annot'
 
 M = {}
 
-function explode_annot(source, dest, annot)
+
+local function explode_annot(source, dest, annot)
     local annot_name, annot_parmstart = annot:match("^@([%w_]+)([%[%{]?)")
     if annot_name == nil then
         -- invalid annotation, TODO raise warning
@@ -26,7 +28,7 @@ function explode_annot(source, dest, annot)
               .. annot_parmstart .. "'")
     end
 
-    annot_fn = annot_mod[annot_name:lower()]
+    local annot_fn = annot_mod[annot_name:lower()]
     if annot_fn == nil then
         print(string.format(
             "WARNING: Attempt to call a nonexistent annotation '%s'. This line will be skipped.",
@@ -37,7 +39,8 @@ function explode_annot(source, dest, annot)
     end
 end
 
-function recursive_insert_word(insertion_point, remaining_words, item, level)
+
+local function recursive_insert_word(insertion_point, remaining_words, item, level)
     -- If there is only one word left, insert the item at the insertion point.
     -- If the source is a single word, this is all that will run and we don't
     -- get into the recursive part.
@@ -73,7 +76,8 @@ function recursive_insert_word(insertion_point, remaining_words, item, level)
         remaining_words, item, level + 1)
 end
 
-function insert_mapping(lut, source, dest, item)
+
+local function insert_mapping(lut, source, dest, item)
     if #item.dest > #source then
         print(string.format(
             "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
@@ -99,7 +103,8 @@ function insert_mapping(lut, source, dest, item)
     end
 end
 
-function source_parts(item)
+
+local function source_parts(item)
     local elts = {}
     for i in string.gmatch(item.source, "[^,]*") do
         if i == nil then
@@ -118,7 +123,8 @@ function source_parts(item)
     return #elts == 0 and {item.source} or elts
 end
 
-function lut_entries_from_item(lut, item)
+
+local function lut_entries_from_item(lut, item)
     for _, inner_source in ipairs(source_parts(item)) do
         local my_item = util.shallow_copy(item)
         insert_mapping(lut, inner_source, item.dest, my_item)
@@ -130,7 +136,7 @@ function lut_entries_from_item(lut, item)
                     -- If the same, an annotation resulted in an identical value
                     -- to the root (e.g., 'read => ris @v' does this).
                     -- We don't want a warning in this case!
-                    new_item = util.shallow_copy(item)
+                    local new_item = util.shallow_copy(item)
                     new_item.source = exp_source
                     new_item.dest = exp_dest
                     insert_mapping(lut, exp_source, exp_dest, new_item)
@@ -140,11 +146,13 @@ function lut_entries_from_item(lut, item)
     end
 end
 
-function is_comment(line)
+
+local function is_comment(line)
     return util.trim(line):sub(1, 1) == '#'
 end
 
-function needs_print(item)
+
+local function needs_print(item)
     -- An item needs to be printed in a trace if it has a ? flag or if any child does.
     if item.flags ~= nil and item.flags:match("%?") then
         return true
@@ -159,7 +167,34 @@ function needs_print(item)
     return false
 end
 
-function print_tracing(lut)
+
+local function lut_entries_from_directive(lut, directive, line_num)
+    local flags, source, dest, annot = directive:match(
+            "([-%+%?%!]*)(.-)%s*=>%s*([^@]*)(.*)")
+    if source == nil or dest == nil then
+        print(string.format("WARNING: Ignoring invalid line %d: %s", line_num, directive))
+        return
+    end
+
+    lut_entries_from_item(lut, {
+        directive = directive,
+        flags     = flags,
+        source    = source,
+        dest      = util.trim(dest),
+        annot     = util.trim(annot),
+        line      = line_num
+    })
+
+    if flags:match("%!") then
+        print(string.format(
+            "WARNING: Cut found on line %d, skipping rest of dictionary.",
+            line_num))
+        return "cut"
+    end
+end
+
+
+function M.trace(lut)
     local prints = {}
     for k, v in pairs(lut) do
         if needs_print(v) then
@@ -179,38 +214,25 @@ function print_tracing(lut)
     end
 end
 
-function M.build(filename)
+
+-- Given the path to a file containing a tersen dictionary, return a
+-- lookup-table structure that 
+function M.build_from_dict_file(filename)
     local lut = {}
-    idx = 1
-    f = io.open(filename)
+    local line_num = 1
+
+    local f = io.open(filename)
     for directive in f:lines() do
         if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
-            local flags, source, dest, annot = directive:match(
-                    "([-%+%?%!]*)(.-)%s*=>%s*([^@]*)(.*)")
-            if source == nil or dest == nil then
-                print(string.format("WARNING: Ignoring invalid line %d: %s", idx, directive))
-            else
-                lut_entries_from_item(lut, {
-                    directive = directive,
-                    flags     = flags,
-                    source    = source,
-                    dest      = util.trim(dest),
-                    annot     = util.trim(annot),
-                    line      = idx
-                })
-                if flags:match("%!") then
-                    print(string.format(
-                        "WARNING: Cut found on line %d, skipping rest of dictionary.",
-                        idx))
-                    break
-                end
+            local result = lut_entries_from_directive(lut, directive, line_num)
+            if result == "cut" then
+                break
             end
         end
-        idx = idx + 1
+        line_num = line_num + 1
     end
     f:close()
 
-    print_tracing(lut)
     return lut
 end
 

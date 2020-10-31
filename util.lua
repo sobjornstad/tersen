@@ -19,7 +19,7 @@ function M.split_whitespace(str)
 end
 
 function M.shallow_copy(t)
-    new_t = {}
+    local new_t = {}
     for k, v in pairs(t) do
         new_t[k] = v
     end

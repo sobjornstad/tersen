@@ -4,8 +4,8 @@ local hooks_mod = require 'hooks'
 local lut_mod = require 'lut'
 
 
-function munge_input(word)
-    initial_part, word_part, final_part = string.match(word, "(%W*)([-'’%w]+)(.*)")
+local function munge_input(word)
+    local initial_part, word_part, final_part = string.match(word, "(%W*)([-'’%w]+)(.*)")
     if initial_part == nil or word_part == nil or final_part == nil then
         return nil, word, nil
     else
@@ -13,8 +13,9 @@ function munge_input(word)
     end
 end
 
+
 -- Given a replacement and source, decide what casing to use for the replacement.
-function normalize_case(new_word, original_word)
+local function normalize_case(new_word, original_word)
     if util.is_nil_or_whitespace(new_word) then
         -- If new_word is emptyish, just return whatever's there.
         return new_word
@@ -41,7 +42,7 @@ end
 
 -- Recursively consume tokens from the word list, finding the longest possible
 -- match in the lookup table beginning at word_base_index.
-function tersen_from(retrieve_point, words, word_base_index, word_at_index)
+local function tersen_from(retrieve_point, words, word_base_index, word_at_index)
     if words[word_at_index] == nil then
         -- If we are going beyond the end of our input, this is not a match.
         return nil
@@ -61,7 +62,7 @@ function tersen_from(retrieve_point, words, word_base_index, word_at_index)
             word_at_index - word_base_index + 1
     else
         -- Longer matches may exist; try to consume more tokens.
-        item, child_initial, child_final, child_advance = tersen_from(
+        local item, child_initial, child_final, child_advance = tersen_from(
             this_word.continuation,
             words,
             word_base_index,
@@ -81,7 +82,8 @@ function tersen_from(retrieve_point, words, word_base_index, word_at_index)
     end
 end
 
-function tersen(lut, text, stats)
+
+local function tersen(lut, text, stats)
     -- Tokenize input into whitespace-separated words.
     local words = {}
     for word in string.gmatch(text, "%S+") do
@@ -90,24 +92,24 @@ function tersen(lut, text, stats)
 
     -- Initialize run-global table of unmatched tokens for statistical purposes.
     local tersened = {}
-    if _G.unmatched_tokens == nil then
-        unmatched_tokens = {}
+    if _G.UNMATCHED_TOKENS == nil then
+        UNMATCHED_TOKENS = {}
     end
 
     -- Work down the list of tokens. At each iteration, greedily consume one
     -- or more matching tokens and advance loop counter by the number of tokens
     -- consumed.
-    i = 1
+    local i = 1
     while i <= #words do
-        item, initial, final, advance = tersen_from(lut, words, i, i)
+        local item, initial, final, advance = tersen_from(lut, words, i, i)
         if item == nil then
             -- No matches found starting at this word.
             -- Insert into dict of nonexistent words.
-            tw_munged = words[i]:lower()
-            if unmatched_tokens[tw_munged] ~= nil then
-                unmatched_tokens[tw_munged] = unmatched_tokens[tw_munged] + 1
+            local tw_munged = words[i]:lower()
+            if UNMATCHED_TOKENS[tw_munged] ~= nil then
+                UNMATCHED_TOKENS[tw_munged] = UNMATCHED_TOKENS[tw_munged] + 1
             else
-                unmatched_tokens[tw_munged] = 1
+                UNMATCHED_TOKENS[tw_munged] = 1
             end
 
             local tersened_word
@@ -124,29 +126,31 @@ function tersen(lut, text, stats)
             if item.dest:sub(-1, -1) == '.' and final:sub(1, 1) == '.' then
                 -- If the abbreviation ends with a '.', and there's already a '.' here,
                 -- whack one of them.
-                final = final:sub(2, -1)
+                local final = final:sub(2, -1)
             end
             table.insert(tersened, initial .. normalize_case(item.dest, words[i]) .. final)
             i = i + advance
         end
     end
 
-    result = table.concat(tersened, " ")
+    local result = table.concat(tersened, " ")
     if stats == nil then
         return result
     else
-        return result, #text, #result, #result/#text, unmatched_tokens
+        return result, #text, #result, #result/#text, UNMATCHED_TOKENS
     end
 end
 
-local lut = lut_mod.build("full_tersen.txt")
+
+local lut = lut_mod.build_from_dict_file("full_tersen.txt")
+lut_mod.trace(lut)
 --local lut = build_lut("tersen_dict.txt")
 --print(inspect(lut))
 
-input = io.open("/home/soren/random-thoughts.txt")
-orig_tot, new_tot = 0, 0
+local input = io.open("/home/soren/random-thoughts.txt")
+local orig_tot, new_tot = 0, 0
 for i in input:lines() do
-    result, orig, new = tersen(lut, i, true)
+    local result, orig, new = tersen(lut, i, true)
     print(result)
     orig_tot = orig_tot + orig
     new_tot = new_tot + new
@@ -154,8 +158,8 @@ end
 
 print("Stats:", orig_tot, new_tot, new_tot / orig_tot)
 print("Unmatched tokens:")
-token_mapping = {}
-for k, v in pairs(unmatched_tokens) do
+local token_mapping = {}
+for k, v in pairs(UNMATCHED_TOKENS) do
     table.insert(token_mapping, {k, v})
 end
 table.sort(token_mapping, function (left, right) return left[2] > right[2] end)
