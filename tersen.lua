@@ -65,8 +65,8 @@ local function tersen_from(retrieve_point, words, word_base_index, word_at_index
         -- If we are going beyond the end of our input, this is not a match.
         return nil
     end
-    local lowered_word = string.lower(words[word_at_index])
 
+    local lowered_word = string.lower(words[word_at_index])
     local initial, inner_token, final = delineate(lowered_word)
     local this_word = retrieve_point[inner_token]
     if this_word == nil then
@@ -101,7 +101,10 @@ local function tersen_from(retrieve_point, words, word_base_index, word_at_index
 end
 
 
-local function iter_over_tersened_words(lut, text, callback)
+-- Iterate over a series of tokens from /text/ tersened with reference to /lut/.
+-- On each iteration, yield the source word, the tersened item,
+-- and the initial/final token perimeter.
+local function tersened_words(lut, text)
     -- Tokenize input into whitespace-separated words.
     local words = {}
     for word in string.gmatch(text, "%S+") do
@@ -109,13 +112,16 @@ local function iter_over_tersened_words(lut, text, callback)
     end
 
     local i = 1
-    while i <= #words do
-        local item, initial, final, advance = tersen_from(lut, words, i, i)
-        callback(words[i], item, initial, final)
-        if advance == nil then
-            i = i + 1
-        else
-            i = i + advance
+    return function()
+        while i <= #words do
+            local item, initial, final, advance = tersen_from(lut, words, i, i)
+            local source_word = words[i]
+            if advance == nil then
+                i = i + 1
+            else
+                i = i + advance
+            end
+            return source_word, item, initial, final
         end
     end
 end
@@ -140,7 +146,7 @@ end
 -- didn't match an entry in the lookup table /lut/.
 local function unmatched_in_corpus(lut, text)
     local unmatched = {}
-    iter_over_tersened_words(lut, text, function(source_word, item)
+    for source_word, item in tersened_words(lut, text) do
         if item == nil then
             local _, inner_tok, _ = delineate(source_word)
             local report_as = inner_tok:lower()
@@ -150,14 +156,14 @@ local function unmatched_in_corpus(lut, text)
                 unmatched[report_as] = 1
             end
         end
-    end)
+    end
     return unmatched
 end
 
 
 local function tersen(lut, text)
     local tersened = {}
-    iter_over_tersened_words(lut, text, function(source_word, item, initial, final)
+    for source_word, item, initial, final in tersened_words(lut, text) do
         if item == nil then
             local tersened_word
             if hooks.no_match ~= nil then
@@ -175,7 +181,7 @@ local function tersen(lut, text)
             table.insert(tersened,
                          initial .. normalize_case(item.dest, source_word) .. final)
         end
-    end)
+    end
 
     local result = table.concat(tersened, " ")
     return result, #text, #result, #result/#text
