@@ -303,10 +303,15 @@ function tersen(lut, text, stats)
         table.insert(words, word)
     end
 
+    -- Initialize run-global table of unmatched tokens for statistical purposes.
+    local tersened = {}
+    if _G.unmatched_tokens == nil then
+        unmatched_tokens = {}
+    end
+
     -- Work down the list of tokens. At each iteration, greedily consume one
     -- or more matching tokens and advance loop counter by the number of tokens
     -- consumed.
-    local tersened = {}
     i = 1
     while i <= #words do
         item, initial, final, advance = tersen_from(lut, words, i, i)
@@ -345,7 +350,7 @@ function tersen(lut, text, stats)
     if stats == nil then
         return result
     else
-        return result, #text, #result, #result/#text
+        return result, #text, #result, #result/#text, unmatched_tokens
     end
 end
 
@@ -363,6 +368,16 @@ for i in input:lines() do
 end
 
 print("Stats:", orig_tot, new_tot, new_tot / orig_tot)
+print("Unmatched tokens:")
+token_mapping = {}
+for k, v in pairs(unmatched_tokens) do
+    table.insert(token_mapping, {k, v})
+end
+table.sort(token_mapping, function (left, right) return left[2] > right[2] end)
+for index, pair in ipairs(token_mapping) do
+    if index > 100 then break end
+    print(string.format("%d\t%s", pair[2], pair[1]))
+end
 
 --print(tersen(lut, "St. Olaf College"))
 --print(tersen(lut, "RED Soren Bjornstad and the red-clothed folk who Random Thoughts like Soren..."))
