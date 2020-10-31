@@ -1,10 +1,11 @@
 local inspect = require 'inspect'  -- DEBUG
 local util = require 'util'
-local hooks_mod = require 'hooks'
+local hooks = require 'hooks'
 local lut_mod = require 'lut'
 
 
-local function munge_input(word)
+-- Split a token into its inner portion and its initial/final portions.
+local function delineate(word)
     local initial_part, word_part, final_part = string.match(word, "(%W*)([-'’%w]+)(.*)")
     if initial_part == nil or word_part == nil or final_part == nil then
         return nil, word, nil
@@ -14,15 +15,17 @@ local function munge_input(word)
 end
 
 
--- Given a replacement and source, decide what casing to use for the replacement.
-local function normalize_case(new_word, original_word)
+-- Standard behavior of normalize_case. May be overridden by a hook.
+local function default_normalize_case(new_word, original_word)
     if util.is_nil_or_whitespace(new_word) then
         -- If new_word is emptyish, just return whatever's there.
         return new_word
+
     elseif util.is_upper(original_word) or util.is_upper(new_word) then
         -- If the original word is uppercase OR the replacement is uppercase
         -- (indicating the replacement is an acronym), use uppercase.
         return string.upper(new_word)
+
     elseif util.is_title(original_word) then
         -- Otherwise, if the original word is title case, presumably because it
         -- was at the start of a sentence or part of a name, use title case.
@@ -34,11 +37,26 @@ local function normalize_case(new_word, original_word)
         else
             return initial .. first_alnum:upper() .. final
         end
+
     else
         -- In all other situations, use the case of the replacement.
         return new_word
     end
 end
+
+
+-- Given a replacement and source, decide what casing to use for the replacement.
+local function normalize_case(new_word, original_word)
+    if hooks.normalize_case ~= nil then
+        local hooked_case = hooks.normalize_case(new_word, original_word)
+        if hooked_case ~= nil then
+            return hooked_case
+        end
+    end
+
+    return default_normalize_case(new_word, original_word)
+end
+
 
 -- Recursively consume tokens from the word list, finding the longest possible
 -- match in the lookup table beginning at word_base_index.
@@ -49,8 +67,8 @@ local function tersen_from(retrieve_point, words, word_base_index, word_at_index
     end
     local lowered_word = string.lower(words[word_at_index])
 
-    local initial, munged_word, final = munge_input(lowered_word)
-    local this_word = retrieve_point[munged_word]
+    local initial, inner_token, final = delineate(lowered_word)
+    local this_word = retrieve_point[inner_token]
     if this_word == nil then
         -- No match in this branch.
         return nil
@@ -113,8 +131,8 @@ local function tersen(lut, text, stats)
             end
 
             local tersened_word
-            if hooks_mod.no_match ~= nil then
-                tersened_word = hooks_mod.no_match(words[i])
+            if hooks.no_match ~= nil then
+                tersened_word = hooks.no_match(words[i])
             else
                 tersened_word = words[i]
             end
@@ -126,7 +144,7 @@ local function tersen(lut, text, stats)
             if item.dest:sub(-1, -1) == '.' and final:sub(1, 1) == '.' then
                 -- If the abbreviation ends with a '.', and there's already a '.' here,
                 -- whack one of them.
-                local final = final:sub(2, -1)
+                final = final:sub(2, -1)
             end
             table.insert(tersened, initial .. normalize_case(item.dest, words[i]) .. final)
             i = i + advance
