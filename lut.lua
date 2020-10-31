@@ -180,8 +180,8 @@ local function lut_entries_from_item(lut, item)
         local my_item = util.shallow_copy(item)
         insert_mapping(lut, inner_source, item.dest, my_item)
 
-        local exploded = explode_annot(inner_source, item.dest, item.annot)
-        if exploded ~= nil then
+        if not util.is_nil_or_whitespace(item.annot) then
+            local exploded = explode_annot(inner_source, item.dest, item.annot)
             lut_entries_from_explosion(lut, item, inner_source, exploded)
         end
     end
