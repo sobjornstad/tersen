@@ -131,9 +131,22 @@ end
 -- Add a mapping from /source/ to /dest/ in the lookup table.
 local function insert_mapping(lut, source, dest, item)
     if #item.dest > #source then
-        print(string.format(
-            "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
-            item.dest, source, item.line, item.directive))
+        local new_source, new_dest = hook
+            .try_invoke("mapping_verbosens_text", source, item.dest, item)
+            :or_execute(function()
+                print(string.format(
+                    "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
+                    item.dest, source, item.line, item.directive))
+                return source, item.dest
+            end)
+        if new_source == nil or new_dest == nil then
+            return
+        else
+            -- TODO: We probably should not be altering item;
+            -- not using the dest param is probably a bug anyway;
+            -- we should extract this if-statement bit into a new function then.
+            source, item.dest = new_source, new_dest
+        end
     end
 
     local existing_item = lut[source:lower()]

@@ -7,7 +7,7 @@ HookResult = {}
 
 function HookResult:from_success(hook, ...)
     local new_obj = {
-        retval = M.invoke(hook, ...),
+        retval = table.pack(M.invoke(hook, ...)),
         defined = true,
     }
     self.__index = self
@@ -33,7 +33,7 @@ end
 -- If the hook doesn't exist, use the result of /func/ instead.
 function HookResult:or_execute(func)
     if self.defined then
-        return self.retval
+        return table.unpack(self.retval)
     else
         return func()
     end
@@ -42,7 +42,7 @@ end
 -- If the hook doesn't exist, return /retval/ instead.
 function HookResult:or_return(retval)
     if self.defined then
-        return self.retval
+        return table.unpack(self.retval)
     else
         return retval
     end

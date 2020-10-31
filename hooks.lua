@@ -108,6 +108,32 @@ end
 --]]
 
 
+--[[
+mapping_verbosens_text()
+
+Description:
+    If a mapping is found that is longer than its corresponding source,
+    mapping_verbosens_text() decides what to do.
+
+    If this hook is not defined, tersen will print a warning and use the
+    mapping unchanged.
+
+Parameters:
+  @source  The source of the mapping.
+  @dest    The replacement of the mapping (longer than source)
+  @item    The lookup-table value for this destination,
+           containing properties like the original source directive and line number.
+
+Return:
+    A source, destination pair for the mapping you want to use,
+    or nil if you want to skip including this item in the lookup table entirely.
+--]
+function M.mapping_verbosens_text(source, dest)
+    return source, dest
+end
+--]]
+
+
 
 local function greeken(str)
     local gk_tab = {
