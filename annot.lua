@@ -15,7 +15,11 @@ function M.adj (source, dest, args)
     else
         comparative, superlative = table.unpack(args)
     end
-    return {[comparative] = "me" .. dest, [superlative] = "my" .. dest}
+    return {
+        [source] = dest,
+        [comparative] = "me" .. dest,
+        [superlative] = "my" .. dest,
+    }
 end
 
 
@@ -36,13 +40,15 @@ end
 
 function M.n (source, dest, args)
     local plural = pluralize_source(source, args)
-    return {[plural] = dest .. "z"}
+    return {[source] = dest, [plural] = dest .. "z"}
 end
+
 
 function M.n_acro (source, dest, args)
     local plural = pluralize_source(source, args)
-    return {[plural] = dest .. "s"}
+    return {[source] = dest, [plural] = dest .. "s"}
 end
+
 
 function M.v (source, dest, args)
     local third, past, perfect, participle
@@ -59,18 +65,26 @@ function M.v (source, dest, args)
     else
         third, past, perfect, participle = table.unpack(args)
     end
-    -- If any are the same, they will be silently collapsed.
-    return {[third] = dest,
-            [past] = "y" .. dest,
-            [perfect] = dest .. "d",
-            [participle] = "u" .. dest}
+
+    -- Place more fundamental forms last; if any keys are the same, the ones
+    -- that come last win. E.g., it seems less objectionable to have the present of
+    -- "run" used for the past participle than vice versa!
+    return {
+        [third] = dest,
+        [past] = "y" .. dest,
+        [perfect] = dest .. "d",
+        [participle] = "u" .. dest,
+        [source] = dest,
+    }
 end
+
 
 function M.apos (source, dest, args)
     local straight = string.gsub(source, "'", "’")
     local curly = string.gsub(source, "’", "'")
     return {[straight] = dest, [curly] = dest}
 end
+
 
 function M.numbers (source, dest, args)
     local ones  = {one = 1, two = 2, three = 3, four = 4, five = 5, six = 6,

@@ -173,16 +173,10 @@ end
 -- call here to add lookup entries based on the explosion.
 local function lut_entries_from_explosion(lut, item, inner_source, exploded)
     for exploded_source, exploded_dest in pairs(exploded) do
-        if exploded_source == inner_source then
-            -- If the same, an annotation resulted in an identical value
-            -- to the root (e.g., 'read => ris @v' does this).
-            -- We don't want a warning in this case, so do nothing.
-        else
-            local new_item = util.shallow_copy(item)
-            new_item.source = exploded_source
-            new_item.dest = exploded_dest
-            insert_mapping(lut, exploded_source, exploded_dest, new_item)
-        end
+        local new_item = util.shallow_copy(item)
+        new_item.source = exploded_source
+        new_item.dest = exploded_dest
+        insert_mapping(lut, exploded_source, exploded_dest, new_item)
     end
 end
 
@@ -191,10 +185,10 @@ end
 -- and perhaps an annotation, add mappings to the lookup table.
 local function lut_entries_from_item(lut, item)
     for _, inner_source in ipairs(source_parts(item)) do
-        local my_item = util.shallow_copy(item)
-        insert_mapping(lut, inner_source, item.dest, my_item)
-
-        if not util.is_nil_or_whitespace(item.annot) then
+        if util.is_nil_or_whitespace(item.annot) then
+            local my_item = util.shallow_copy(item)
+            insert_mapping(lut, inner_source, item.dest, my_item)
+        else
             local exploded = explode_annot(inner_source, item.dest, item.annot)
             lut_entries_from_explosion(lut, item, inner_source, exploded)
         end
