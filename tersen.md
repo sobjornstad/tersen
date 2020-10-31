@@ -194,6 +194,11 @@ When replacing a match,
 
 Though these rules are not always perfect,
     for the most part, tersen will just “do the right thing” with case.
+If you find it is doing the wrong thing,
+    the `normalize_case(new_word, orig_word)` hook
+    allows you to override the default behavior;
+    you can either return the word you want to use,
+    or nil to use the default behavior.
 
 
 ## Special cases
