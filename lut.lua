@@ -1,14 +1,28 @@
 local annotation_functions = require 'annot'
 local hook = require 'hook_exec'
-local inspect = require 'inspect'  -- DEBUG
 local util = require 'util'
 
 local M = {}
 
-
--- A tersen dictionary line is a comment if its first non-whitespace character is #.
-local function is_comment(line)
-    return util.trim(line):sub(1, 1) == '#'
+---------- Utilities ----------
+-- If the destination is longer than the source, warn, or take whatever other action
+-- is defined in the appropriate hook.
+local function handle_longer_destination(item)
+    if #item.dest > #item.source then
+        local new_source, new_dest = hook
+            .try_invoke("mapping_verbosens_text", item.source, item.dest, item)
+            :or_execute(function()
+                print(string.format(
+                    "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
+                    item.dest, item.source, item.line, item.directive))
+                return item.source, item.dest
+            end)
+        if new_source == nil or new_dest == nil then
+            return
+        else
+            item.source, item.dest = new_source, new_dest
+        end
+    end
 end
 
 
@@ -34,6 +48,8 @@ local function source_parts(item)
 end
 
 
+
+---------- Annotations ----------
 -- Given an annotation string (the part beginning with @),
 -- return its name (string) and its parameters (list of strings).
 local function parse_annot(annot)
@@ -61,13 +77,13 @@ end
 
 -- Apply an annotation function defined in annot.lua to the source => dest mapping,
 -- returning a table of one or more new source => dest mappings.
-local function explode_annot(source, dest, annot)
-    local annot_name, annot_parms = parse_annot(annot)
+local function explode_annot(item)
+    local annot_name, annot_parms = parse_annot(item.annot)
 
     if annot_name == nil then
         print(string.format(
             "WARNING: Missing annotation name (@something) on mapping %s => %s. "
-            .. "This mapping will be skipped.", source, dest))
+            .. "This mapping will be skipped.", item.source, item.dest))
         return {}
     end
 
@@ -75,14 +91,15 @@ local function explode_annot(source, dest, annot)
     if annot_fn == nil then
         print(string.format(
             "WARNING: Attempt to call a nonexistent annotation '%s'. This line will be skipped.",
-            annot))
+            item.annot))
         return {}
     end
 
-    return annot_fn(source, dest, annot_parms)
+    return annot_fn(item.source, item.dest, annot_parms)
 end
 
 
+---------- Insertion ----------
 -- Add an entry for a word to the lut (or continuation) at insertion_point.
 local function insert_word_here(insertion_point, word, item)
     if insertion_point[word] == nil then
@@ -99,7 +116,7 @@ end
 -- Insert a series of tokens at /insertion_point/. If there's more than one token,
 -- we recurse into the 'continuation' property of the first token, creating it if
 -- it doesn't exist, and work from there.
-local function recursive_insert_word(insertion_point, remaining_words, item, level)
+local function insert_word_recursively(insertion_point, remaining_words, item, level)
     local current_word = string.lower(remaining_words[1])
 
     -- If there is only one word, insert the item at the insertion point.
@@ -122,44 +139,23 @@ local function recursive_insert_word(insertion_point, remaining_words, item, lev
         level = 1
     end
     table.remove(remaining_words, 1)
-    return recursive_insert_word(
+    return insert_word_recursively(
         insertion_point[current_word].continuation,
         remaining_words, item, level + 1)
 end
 
 
--- If the destination is longer than the source, warn, or take whatever other action
--- is defined in the appropriate hook.
-local function handle_longer_destination(item)
-    if #item.dest > #item.source then
-        local new_source, new_dest = hook
-            .try_invoke("mapping_verbosens_text", item.source, item.dest, item)
-            :or_execute(function()
-                print(string.format(
-                    "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
-                    item.dest, item.source, item.line, item.directive))
-                return item.source, item.dest
-            end)
-        if new_source == nil or new_dest == nil then
-            return
-        else
-            item.source, item.dest = new_source, new_dest
-        end
-    end
-end
-
-
 -- Add a mapping from /source/ to /dest/ in the lookup table.
-local function insert_mapping(lut, item)
+local function new_mapping(lut, item)
     handle_longer_destination(item)
 
     local existing_item = lut[item.source:lower()]
     if existing_item == nil then  -- entry doesn't exist yet
-        recursive_insert_word(lut, util.split_whitespace(item.source), item)
+        insert_word_recursively(lut, util.split_whitespace(item.source), item)
 
     elseif existing_item.dest == nil then  -- a continuation-only entry exists
         local existing_cont = existing_item.continuation
-        recursive_insert_word(lut, util.split_whitespace(item.source), item)
+        insert_word_recursively(lut, util.split_whitespace(item.source), item)
         item.continuation = existing_cont
 
     else  -- this source has already been mapped
@@ -175,18 +171,6 @@ local function insert_mapping(lut, item)
 end
 
 
--- If an item exploded due to an annotation,
--- call here to add lookup entries based on the explosion.
-local function lut_entries_from_explosion(lut, item, inner_source, exploded)
-    for exploded_source, exploded_dest in pairs(exploded) do
-        local new_item = util.shallow_copy(item)
-        new_item.source = exploded_source
-        new_item.dest = exploded_dest
-        insert_mapping(lut, new_item)
-    end
-end
-
-
 -- Given an item table containing one or more sources, a destination,
 -- and perhaps an annotation, add mappings to the lookup table.
 local function lut_entries_from_item(lut, item)
@@ -194,12 +178,24 @@ local function lut_entries_from_item(lut, item)
         if util.is_nil_or_whitespace(item.annot) then
             local inner_item = util.shallow_copy(item)
             inner_item.source = inner_source
-            insert_mapping(lut, inner_item)
+            new_mapping(lut, inner_item)
         else
-            local exploded = explode_annot(inner_source, item.dest, item.annot)
-            lut_entries_from_explosion(lut, item, inner_source, exploded)
+            local exploded = explode_annot(item)
+            for exploded_source, exploded_dest in pairs(exploded) do
+                local new_item = util.shallow_copy(item)
+                new_item.source = exploded_source
+                new_item.dest = exploded_dest
+                new_mapping(lut, new_item)
+            end
         end
     end
+end
+
+
+---------- Parsing ----------
+-- A tersen dictionary line is a comment if its first non-whitespace character is #.
+local function is_comment(line)
+    return util.trim(line):sub(1, 1) == '#'
 end
 
 
@@ -209,7 +205,9 @@ local function lut_entries_from_directive(lut, directive, line_num)
     local flags, source, dest, annot = directive:match(
             "([-%+%?%!]*)(.-)%s*=>%s*([^@]*)(.*)")
     if source == nil or dest == nil then
-        print(string.format("WARNING: Ignoring invalid line %d: %s", line_num, directive))
+        print(string.format(
+            "WARNING: Ignoring invalid line %d: %s",
+            line_num, directive))
         return nil
     end
 
@@ -233,50 +231,8 @@ local function lut_entries_from_directive(lut, directive, line_num)
 end
 
 
--- An item needs to be printed in a trace if it has a ? flag or if any child does.
-local function needs_print(item)
-    if item.flags ~= nil and item.flags:match("%?") then
-        return true
-    end
-
-    if item.continuation ~= nil then
-        for _, child_item in pairs(item.continuation) do
-            if needs_print(child_item) then
-                return true
-            end
-        end
-    end
-
-    return false
-end
-
-
--- Print all items in the provided lookup table that have a trace flag on.
-function M.trace(lut)
-    local prints = {}
-    for k, v in pairs(lut) do
-        if needs_print(v) then
-            table.insert(prints, k .. ' => ' .. inspect(v))
-        end
-    end
-
-    if #prints > 0 then
-        local ess = (#prints == 1) and '' or 's'
-        print("WARNING: At least one trace flag was found in the dictionary.")
-        print(string.format(
-            "Traced replacements for %d root node%s and children:",
-            #prints, ess))
-        for _, v in ipairs(prints) do
-            print(v)
-        end
-    end
-
-    hook.invoke("trace", lut)
-end
-
-
--- Given the path to a file containing a tersen dictionary, return a
--- lookup-table structure that 
+-- Given the path to a file containing a tersen dictionary,
+-- build and return a tersen lookup table.
 function M.build_from_dict_file(filename)
     local lut = {}
     local line_num = 1

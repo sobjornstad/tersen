@@ -1,11 +1,12 @@
 local inspect = require 'inspect'  -- DEBUG
 local lut_mod = require 'lut'
 local tersen_mod = require 'tersen'
+local trace_mod = require 'trace'
 
 local lut = lut_mod.build_from_dict_file("tersen_dict.txt")
 --local lut = lut_mod.build_from_dict_file("full_tersen.txt")
-lut_mod.trace(lut)
-print(inspect(lut))
+trace_mod.trace(lut)
+--print(inspect(lut))
 os.exit(1)
 --local myfile = io.open("/home/soren/random-thoughts.txt")
 --local unmatched = tersen_mod.unmatched_in_corpus(lut, myfile:read("*a"))
