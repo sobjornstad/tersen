@@ -104,12 +104,7 @@ end
 -- On each iteration, yield the source word, the tersened item,
 -- and the initial/final token perimeter.
 local function tersened_words(lut, text)
-    -- Tokenize input into whitespace-separated words.
-    local words = {}
-    for word in string.gmatch(text, "%S+") do
-        table.insert(words, word)
-    end
-
+    local words = util.split_whitespace(text)
     local i = 1
     return function()
         while i <= #words do
