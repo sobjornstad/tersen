@@ -44,4 +44,9 @@ function M.is_nil_or_whitespace(s)
     return s == nil or M.trim(s) == ''
 end
 
+-- Convert nil to empty string, or keep existing value of string.
+function M.nil_to_empty(s)
+    return s == nil and "" or s
+end
+
 return M

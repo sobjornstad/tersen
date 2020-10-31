@@ -1,5 +1,6 @@
 local case = require 'case'
 local hook = require 'hook_exec'
+local inspect = require 'inspect'
 local util = require 'util'
 
 local M = {}
@@ -60,20 +61,27 @@ end
 
 -- Iterate over a series of tokens from /text/ tersened with reference to /lut/.
 -- On each iteration, yield the source word, the tersened item,
--- and the initial/final token perimeter.
+-- and the whitespace/initial/final token perimeter.
 local function tersened_words(lut, text)
-    local words = util.split_whitespace(text)
+    local whitespaces = {}
+    local words = {}
+    for whitespace, word in string.gmatch(text, "(%s*)(%S+)") do
+        table.insert(words, word)
+        table.insert(whitespaces, whitespace)
+    end
+
     local i = 1
     return function()
         while i <= #words do
             local item, initial, final, advance = tersen_from(lut, words, i, i)
             local source_word = words[i]
+            local whitespace = whitespaces[i]
             if advance == nil then
                 i = i + 1
             else
                 i = i + advance
             end
-            return source_word, item, initial, final
+            return source_word, item, whitespace, initial, final
         end
     end
 end
@@ -118,23 +126,26 @@ end
 -- lookup table /lut/.
 function M.tersen(lut, text)
     local tersened = {}
-    for source_word, item, initial, final in tersened_words(lut, text) do
+    for source_word, item, whitespace, initial, final in tersened_words(lut, text) do
         if item == nil then
             local tersened_word = hook.try_invoke("no_match", source_word)
                 :or_return(source_word)
-            table.insert(tersened, tersened_word)
+            table.insert(tersened, util.nil_to_empty(whitespace) .. tersened_word)
         else
             if item.dest:sub(-1, -1) == '.' and final:sub(1, 1) == '.' then
                 -- If the abbreviation ends with a '.', and there's already a '.' here,
                 -- whack one of them.
                 final = final:sub(2, -1)
             end
-            table.insert(tersened,
-                         initial .. case.normalize(item.dest, source_word) .. final)
+            local insert = whitespace
+                           .. initial
+                           .. case.normalize(item.dest, source_word)
+                           .. final
+            table.insert(tersened, insert)
         end
     end
 
-    local result = table.concat(tersened, " ")
+    local result = table.concat(tersened, "")
     return result, #text, #result, #result/#text
 end
 

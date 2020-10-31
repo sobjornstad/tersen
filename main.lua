@@ -32,6 +32,8 @@ local function get_parser()
                 "Instead of tersening input, analyze what would have been tersened "
                 .. "and print out the most frequently used words that don't have "
                 .. "abbreviations. ")
+    parser:flag("-o --at-once",
+                "Instead of reading a line at a time, read and process all input in a chunk.")
     return parser
 end
 
@@ -47,10 +49,18 @@ for _, v in ipairs(args.files_to_tersen) do
     else
         f = io.open(v)
     end
-    for line in f:lines() do
-        local res = get_callable(args)(lut, line)
+
+    if args.at_once then
+        local text = f:read("*a")
+        local res = get_callable(args)(lut, text)
         print(res)
+    else
+        for line in f:lines() do
+            local res = get_callable(args)(lut, line)
+            print(res)
+        end
     end
+
     if f ~= io.stdin then
         f:close()
     end
