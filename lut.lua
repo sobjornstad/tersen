@@ -145,28 +145,56 @@ local function insert_word_recursively(insertion_point, remaining_words, item, l
 end
 
 
+-- Add an entirely new item.
+local function insert_new_entry(lut, item)
+    insert_word_recursively(lut, util.split_whitespace(item.source), item)
+end
+
+
+-- Extend or edit an existing item while preserving its continuation.
+local function extend_continuation_entry(lut, item, existing_item)
+    local existing_cont = existing_item.continuation
+    insert_word_recursively(lut, util.split_whitespace(item.source), item)
+    item.continuation = existing_cont
+end
+
+
+-- If the suppress-warnings flag isn't on, warn user of a remap attempt
+-- that wasn't intercepted by the mapping_conflicts hook.
+local function warn_already_mapped(lut, item, existing_item)
+    if not item.flags:match("-") then
+        print(string.format(
+            "WARNING: Ignoring remapping of source '%s' on line %d: %s",
+            item.source, item.line, item.directive))
+        print(string.format(
+            "   note: previously mapped to '%s' on line %d: %s",
+            existing_item.dest, existing_item.line, existing_item.directive))
+    end
+end
+
+
 -- Add a mapping from /source/ to /dest/ in the lookup table.
 local function new_mapping(lut, item)
     handle_longer_destination(item)
-
     local existing_item = lut[item.source:lower()]
-    if existing_item == nil then  -- entry doesn't exist yet
-        insert_word_recursively(lut, util.split_whitespace(item.source), item)
 
-    elseif existing_item.dest == nil then  -- a continuation-only entry exists
-        local existing_cont = existing_item.continuation
-        insert_word_recursively(lut, util.split_whitespace(item.source), item)
-        item.continuation = existing_cont
-
-    else  -- this source has already been mapped
-        if not item.flags:match("-") then
-            print(string.format(
-                "WARNING: Ignoring remapping of source '%s' on line %d: %s",
-                item.source, item.line, item.directive))
-            print(string.format(
-                "   note: previously mapped to '%s' on line %d: %s",
-                existing_item.dest, existing_item.line, existing_item.directive))
+    -- Check for conflicts and decide what to do.
+    if existing_item ~= nil and existing_item.dest ~= nil then
+        local do_remap = hook.try_invoke("mapping_conflicts", item, existing_item)
+            :or_return(nil)
+        if do_remap == nil then
+            warn_already_mapped(lut, item, existing_item)
+            return
+        elseif do_remap == false then
+            return
+        -- If true (overwrite existing mapping), continue.
         end
+    end
+
+    if existing_item == nil then
+        insert_new_entry(lut, item)
+    else
+        extend_continuation_entry(lut, item, existing_item)
     end
 end
 

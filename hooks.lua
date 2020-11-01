@@ -8,7 +8,7 @@ Description:
     tersen dictionary. For instance, you might try abbreviating substrings.
 
 Parameters:
-  @outer_token  The outer token that didn't match.
+    @outer_token  The outer token that didn't match.
 
 Return:
     The token you want to replace this one in the output stream.
@@ -38,8 +38,8 @@ Description:
     can do that in no_match().
 
 Parameters:
-  @new_word   The replacement (tersened) inner token.
-  @orig_word  The original inner token.
+    @new_word   The replacement (tersened) inner token.
+    @orig_word  The original inner token.
 
 Return:
     The inner token you want to use in the output stream,
@@ -69,7 +69,7 @@ Description:
     this hook.
 
 Parameters:
-  @lut   The complete tersen lookup table.
+    @lut   The complete tersen lookup table.
 
 Return:
     The return value of this hook is ignored.
@@ -96,7 +96,7 @@ Description:
     accomplish this with annotations; which to use is a matter of taste.
 
 Parameters:
-  @lut   The complete tersen lookup table.
+    @lut   The complete tersen lookup table.
 
 Return:
     The new tersen lookup table you want to use. It is safe to modify the table
@@ -119,11 +119,11 @@ Description:
     mapping unchanged.
 
 Parameters:
-  @source  The source of the mapping.
-  @dest    The replacement of the mapping (longer than source)
-  @item    The lookup-table value for this destination,
-           containing properties like the original source directive and line number.
-           You should not alter this parameter.
+    @source  The source of the mapping.
+    @dest    The replacement of the mapping (longer than source)
+    @item    The lookup-table value for this destination,
+             containing properties like the original source directive and line number.
+             Altering this parameter is undefined behavior.
 
 Return:
     A source, destination pair for the mapping you want to use,
@@ -134,6 +134,30 @@ function M.mapping_verbosens_text(source, dest, item)
 end
 --]]
 
+
+--[[
+mapping_conflicts()
+
+Description:
+    If a mapping is found that has the same source as an existing mapping,
+    mapping_conflicts() decides how to handle it.
+
+    If this hook is not defined, tersen will print a warning and skip the new
+    mapping.
+
+Parameters:
+    @item           The new mapping being inserted.
+    @existing_item  The existing mapping.
+
+Return:
+    - True to overwrite the original mapping with this new mapping.
+    - False to ignore the new mapping.
+    - nil to delegate to tersen's default implementation (warn and ignore).
+--]
+function M.mapping_conflicts(item, existing_item)
+    return nil
+end
+--]]
 
 
 local function greeken(str)
