@@ -3,7 +3,6 @@
   - Only uppercases the first word
 * Correct casing not identified on contractions?
   Sentence-starters are still getting lowercase.
-* Newline handling options for cmdline
 * Improve warnings (print to stderr, give more details)
 
 Maybe:

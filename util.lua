@@ -18,6 +18,22 @@ function M.split_whitespace(str)
     return T
 end
 
+function M.split_paragraphs(str)
+    local paragraphs = {}
+    local last_finish = 0
+    repeat
+        local start, finish = str:find("\n\n", last_finish + 1, true)
+        if start == nil then  -- last iteration
+            start = #str + 1
+            finish = #str + 1
+        end
+
+        table.insert(paragraphs, str:sub(last_finish + 1, start - 1))
+        last_finish = finish
+    until finish > #str
+    return paragraphs
+end
+
 function M.shallow_copy(t)
     local new_t = {}
     for k, v in pairs(t) do

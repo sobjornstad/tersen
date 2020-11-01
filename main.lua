@@ -6,29 +6,35 @@ local trace_mod = require 'trace'
 local util = require 'util'
 
 
+local function fold_paragraph(paragraph_str, cols)
+    local lines = {}
+    local cur_line = {}
+    local at_char = 0
+
+    for _, word in ipairs(util.split_whitespace(paragraph_str)) do
+        if at_char + #word + 1 > cols then
+            table.insert(lines, table.concat(cur_line, " "))
+            cur_line = {}
+
+            table.insert(cur_line, word)
+            at_char = #word
+        else
+            table.insert(cur_line, word)
+            at_char = at_char + #word + 1
+        end
+    end
+
+    table.insert(lines, table.concat(cur_line, " "))
+    table.insert(lines, "")
+    return lines
+end
+
+
 local function refold(str, cols)
     local lines = {}
-
-    for paragraph in str:gmatch("(.-)\n\n+") do
-        local cur_line = {}
-        local at_char = 0
-
-        for _, word in ipairs(util.split_whitespace(paragraph)) do
-            --TODO: super-long word handling
-            if at_char + #word + 1 > cols then
-                table.insert(lines, table.concat(cur_line, " "))
-                cur_line = {}
-
-                table.insert(cur_line, word)
-                at_char = #word
-            else
-                table.insert(cur_line, word)
-                at_char = at_char + #word + 1
-            end
-        end
-
-        table.insert(lines, table.concat(cur_line, " "))
-        table.insert(lines, "")
+    for _, paragraph in ipairs(util.split_paragraphs(str)) do
+        local inner_lines = fold_paragraph(paragraph, cols)
+        table.move(inner_lines, 1, #inner_lines, #lines + 1, lines)
     end
     return table.concat(lines, "\n")
 end
@@ -61,7 +67,8 @@ local function get_parser()
         :args("+")
     parser:flag(
         "-w --width",
-        "Number of columns to re-fold the result to. Only useful with -o.")
+        "Re-fold paragraphs to the specified line width in columns. "
+        .. "Only useful with -o.")
         :args("1")
         :convert(tonumber)
     parser:flag(
@@ -119,6 +126,7 @@ trace_mod.trace(lut)
 --os.exit(1)
 
 os.exit(1)
+
 local input = io.open("/home/soren/random-thoughts.txt")
 local orig_tot, new_tot = 0, 0
 for i in input:lines() do
