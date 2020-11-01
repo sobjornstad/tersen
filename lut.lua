@@ -281,4 +281,22 @@ function M.build_from_dict_file(filename)
         :or_return(lut)
 end
 
+function M.build_from_string(str)
+    local lut = {}
+    local line_num = 1
+
+    for directive in str:gmatch("[^\n]*") do
+        if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
+            local result = lut_entries_from_directive(lut, directive, line_num)
+            if result == "cut" then
+                break
+            end
+        end
+        line_num = line_num + 1
+    end
+
+    return hook.try_invoke("post_build_lut", lut)
+        :or_return(lut)
+end
+
 return M

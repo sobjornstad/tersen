@@ -11,3 +11,13 @@ Maybe:
 * Unicode normalization?
 * Allow applying multiple annotations to one item (they would be cascaded through)
   (If someone really needed this, they could write a function that did it!)
+* Enable webtersen to work with arbitrary hooks and annotations.
+  The fengari-web interop (https://github.com/fengari-lua/fengari-web) has a load() function
+  that should be able to load arbitrary Lua source and return it as a function...although
+  this appears to make it a JS function, which might require some messing around to call from Lua.
+  Alternatively there's probably an eval() equivalent in Lua, so we could just grab the contents
+  of the text box and eval() it from there.
+* Make webtersen not lock up during long-processing;
+  I can't make the Processing item show up because I don't know how
+  to do async JS-style from within Lua. Maybe coroutines could fix this?
+* Format webtersen webpage nicely.

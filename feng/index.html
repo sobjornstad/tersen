@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>webtersen</title>
+        <script src="fengari-web.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <h1>webtersen</h1>
+        A web version of the <code>tersen</code> abbreviation engine.
+        All tersening runs client-side, none of your data leaves your computer.
+        Note that <code>webtersen</code> is much slower
+        than normal command-line <code>tersen</code>;
+        the tab may lock up for a few seconds if you use large inputs.
+
+        <h2>Your verbose text</h2>
+        <form>
+            <textarea rows="20" cols="80" name="verbose_text" id="verbose_text"></textarea>
+        </form>
+
+        <h2>Your tersen dictionary</h2>
+        Tracing is supported; visit the console of your browser's developer tools to see the output.
+        <form>
+            <textarea rows="20" cols="80" name="tersen_dict" id="tersen_dict"></textarea>
+        </form>
+        <div>
+            <input type="submit" value="Tersen!" id="submit">
+            <span id="processing" style="color: red; font-weight: bold; display: none;">Working...</span>
+        </div>
+
+        <hr>
+        <h2>Your tersened text</h2>
+        <div id="results" style="color: blue;">
+
+        </div>
+
+        <script src="webtersen.lua" type="application/lua" async> </script>
+    </body>
+</html>
