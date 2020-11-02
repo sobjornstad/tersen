@@ -71,7 +71,7 @@ end
 
 -- Given a replacement and source, decide what casing to use for the replacement.
 function M.normalize(new_word, original_word)
-    if hook.defined("normalize_case") ~= nil then
+    if hook.defined("normalize_case") then
         local hooked_case = hook.invoke("normalize_case", new_word, original_word)
         if hooked_case ~= nil then
             return hooked_case
