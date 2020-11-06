@@ -174,6 +174,8 @@ local function greeken(str)
         ["a?l?ly"] = "λ",
         ["[ai]ble"] = "β",
         ["[ai]bility"] = "βt",
+        ["trans"] = "τ",
+        ["inter"] = "τ",
     }
     for search, repl in pairs(gk_tab) do
         str = string.gsub(str, search, repl)
