@@ -1,3 +1,6 @@
+-- allow calling from parent directory if needed
+package.path = "./?.lua;tersen/?.lua;" .. package.path
+
 local argparse = require 'argparse'
 local inspect = require 'inspect'  -- DEBUG
 local lut_mod = require 'lut'

@@ -1,4 +1,4 @@
-local annotation_functions = require 'annot'
+local annotation_functions = require 'extend/annot'
 local hook = require 'hook_exec'
 local util = require 'util'
 

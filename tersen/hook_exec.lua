@@ -1,4 +1,4 @@
-local hooks = require 'hooks'
+local hooks = require 'extend/hooks'
 
 local M = {}
 
