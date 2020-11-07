@@ -18,6 +18,11 @@ dependencies = {
 }
 build = {
     type = "builtin",
+    install = {
+        bin = {
+            tersen = "tersen/main.lua",
+        },
+    },
     modules = {
         ["tersen.case"] = "tersen/case.lua",
         ["tersen.hook_exec"] = "tersen/hook_exec.lua",
