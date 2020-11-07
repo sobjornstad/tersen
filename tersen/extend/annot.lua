@@ -5,7 +5,7 @@ local M = {}
 
 -- True if /s/ is a one-character string which is [aeiou].
 local function is_vowel(s)
-    return M.set{"a", "e", "i", "o", "u"}[s] ~= nil
+    return util.set{"a", "e", "i", "o", "u"}[s] ~= nil
 end
 
 
