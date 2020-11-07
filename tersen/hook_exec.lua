@@ -72,7 +72,9 @@ function M.try_invoke(hook, ...)
 end
 
 function M.set_hook_file(filename)
-    hooks = loadfile(filename)()
+    if filename then
+        hooks = loadfile(filename)()
+    end
 end
 
 return M

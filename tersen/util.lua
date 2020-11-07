@@ -19,17 +19,27 @@ function M.trim(str)
 end
 
 
--- Return a list of whitespace-separated tokens. If input is nil, return nil.
-function M.split_whitespace(str)
+local function split_pat(str, pat)
     if str == nil then
         return nil
     end
 
     local T = {}
-    for i in string.gmatch(str, "%S+") do
+    for i in string.gmatch(str, pat .. "+") do
         table.insert(T, i)
     end
     return T
+end
+
+
+-- Return a list of whitespace-separated tokens. If input is nil, return nil.
+function M.split_whitespace(str)
+    return split_pat(str, "%S")
+end
+
+
+function M.split_newlines(str)
+    return split_pat(str, "[^\n]")
 end
 
 

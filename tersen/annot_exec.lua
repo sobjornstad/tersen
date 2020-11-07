@@ -53,7 +53,9 @@ function M.explode(item)
 end
 
 function M.set_annot_file(filename)
-    annotation_functions = loadfile(filename)()
+    if filename then
+        annotation_functions = loadfile(filename)()
+    end
 end
 
 

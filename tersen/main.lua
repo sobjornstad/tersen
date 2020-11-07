@@ -90,19 +90,44 @@ local function get_parser()
     return parser
 end
 
+local function rc_args_from_file(filename)
+    local rc_file = io.open(filename)
+    if rc_file then
+        local rc_text = rc_file:read("*a")
+        rc_file:close()
+        return util.split_newlines(rc_text)
+    end
+end
+
+local function get_args()
+    local home = os.getenv("HOME")
+    local homepath = os.getenv("HOMEPATH")
+    local rc_args = nil
+    if home ~= nil then
+        rc_args = rc_args_from_file(home .. "/.tersenrc")
+    elseif homepath ~= nil then
+        rc_args = rc_args_from_file(home .. "\\.tersenrc")
+    end
+
+    local complete_args = {}
+    if rc_args ~= nil then
+        table.move(rc_args, 1, #rc_args, 1, complete_args)
+    end
+    table.move(arg, 1, #arg, #complete_args + 1, complete_args)
+
+    return complete_args
+end
+
+
 local parser = get_parser()
-local args = parser:parse()
+local args = parser:parse(get_args())
 
-if args.hooks then
-    hook_exec.set_hook_file(args.hooks)
-end
-
-if args.annot then
-    annot_exec.set_annot_file(args.annot)
-end
+hook_exec.set_hook_file(args.hooks)
+annot_exec.set_annot_file(args.annot)
 
 local lut = lut_mod.build_from_dict_file(args.tersen_dict)
 trace_mod.trace(lut)
+
 for _, v in ipairs(args.files_to_tersen) do
     local f
     if v == '-' then
@@ -130,26 +155,3 @@ for _, v in ipairs(args.files_to_tersen) do
         f:close()
     end
 end
-os.exit(1)
-
-local lut = lut_mod.build_from_dict_file("tersen_dict.txt")
---local lut = lut_mod.build_from_dict_file("full_tersen.txt")
-trace_mod.trace(lut)
---print(inspect(lut))
---local myfile = io.open("/home/soren/random-thoughts.txt")
---local unmatched = tersen_mod.unmatched_in_corpus(lut, myfile:read("*a"))
---tersen_mod.print_unmatched_tokens(unmatched)
---os.exit(1)
-
-os.exit(1)
-
-local input = io.open("/home/soren/random-thoughts.txt")
-local orig_tot, new_tot = 0, 0
-for i in input:lines() do
-    local result, orig, new = tersen_mod.tersen(lut, i)
-    print(result)
-    orig_tot = orig_tot + orig
-    new_tot = new_tot + new
-end
-
-print("Stats:", orig_tot, new_tot, new_tot / orig_tot)
