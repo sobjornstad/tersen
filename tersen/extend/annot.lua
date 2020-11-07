@@ -2,6 +2,13 @@ local util = require 'util'
 
 local M = {}
 
+
+-- True if /s/ is a one-character string which is [aeiou].
+local function is_vowel(s)
+    return M.set{"a", "e", "i", "o", "u"}[s] ~= nil
+end
+
+
 function M.adj (source, dest, args)
     local comparative, superlative
     if args == nil then
@@ -53,7 +60,7 @@ end
 function M.v (source, dest, args)
     local third, past, perfect, participle
     if args == nil then
-        if util.is_vowel(source:sub(-1, -1)) then
+        if is_vowel(source:sub(-1, -1)) then
             past = source .. "d"
             participle = source:sub(1, -2) .. "ing"
         else
