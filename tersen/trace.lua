@@ -1,6 +1,7 @@
 local inspect = require 'inspect'  -- DEBUG
 
 local hook = require 'tersen.hook_exec'
+local oops = require 'tersen.oops'
 
 local M = {}
 
@@ -33,12 +34,12 @@ function M.trace(lut)
 
     if #prints > 0 then
         local ess = (#prints == 1) and '' or 's'
-        print("WARNING: At least one trace flag was found in the dictionary.")
-        print(string.format(
-            "Traced replacements for %d root node%s and children:",
+        oops.warn("At least one trace flag was found in the dictionary.")
+        io.stderr:write(string.format(
+            "Traced replacements for %d root node%s and children:\n",
             #prints, ess))
         for _, v in ipairs(prints) do
-            print(v)
+            io.stderr:write(v .. "\n")
         end
     end
 

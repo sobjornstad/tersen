@@ -1,4 +1,5 @@
 local annotation_functions = require 'tersen.extend.annot'
+local oops = require 'tersen.oops'
 local util = require 'tersen.util'
 
 local M = {}
@@ -35,17 +36,18 @@ function M.explode(item)
     local annot_name, annot_parms = parse_annot(item.annot)
 
     if annot_name == nil then
-        print(string.format(
-            "WARNING: Missing annotation name (@something) on mapping %s => %s. "
-            .. "This mapping will be skipped.", item.source, item.dest))
+        oops.warn(
+            "Missing annotation name (@something) on mapping %s => %s. "
+            .. "This mapping will be skipped.", item.source, item.dest)
         return {}
     end
 
     local annot_fn = annotation_functions[annot_name:lower()]
     if annot_fn == nil then
-        print(string.format(
-            "WARNING: Attempt to call a nonexistent annotation '%s'. This line will be skipped.",
-            item.annot))
+        oops.warn(
+            "Attempt to call a nonexistent annotation '%s'. "
+            .. "This line will be skipped.",
+            item.annot)
         return {}
     end
 

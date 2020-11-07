@@ -1,5 +1,6 @@
 local annot_exec = require 'tersen.annot_exec'
 local hook = require 'tersen.hook_exec'
+local oops = require 'tersen.oops'
 local util = require 'tersen.util'
 
 local M = {}
@@ -12,9 +13,9 @@ local function handle_longer_destination(item)
         local new_source, new_dest = hook
             .try_invoke("mapping_verbosens_text", item.source, item.dest, item)
             :or_execute(function()
-                print(string.format(
-                    "WARNING: Destination '%s' is longer than source '%s' on line %d: %s",
-                    item.dest, item.source, item.line, item.directive))
+                oops.warn(
+                    "Destination '%s' is longer than source '%s' on line %d: %s",
+                    item.dest, item.source, item.line, item.directive)
                 return item.source, item.dest
             end)
         if new_source == nil or new_dest == nil then
@@ -32,14 +33,12 @@ local function source_parts(item)
     local elts = {}
     for i in string.gmatch(item.source, "[^,]*") do
         if i == nil then
-            print(string.format(
-                "WARNING: Invalid source directive on line %d: %s",
-                item.line, item.source))
+            oops.warn("Invalid source directive on line %d: %s", item.line, item.source)
         elseif not string.match(i, "^%s*[-'’%w%s]+%s*$") then
-            print(string.format(
-                "WARNING: Source directive is not alphanumeric on line %d "
+            oops.warn(
+                "Source directive is not alphanumeric on line %d "
                 .. "and will be ignored: %s",
-                item.line, item.source))
+                item.line, item.source)
         else
             table.insert(elts, util.trim(i))
         end
@@ -112,12 +111,11 @@ end
 -- that wasn't intercepted by the mapping_conflicts hook.
 local function warn_already_mapped(lut, item, existing_item)
     if not item.flags:match("-") then
-        print(string.format(
-            "WARNING: Ignoring remapping of source '%s' on line %d: %s",
-            item.source, item.line, item.directive))
-        print(string.format(
-            "   note: previously mapped to '%s' on line %d: %s",
-            existing_item.dest, existing_item.line, existing_item.directive))
+        oops.warn(
+            "Ignoring remapping of source '%s' on line %d: %s\n"
+            .. "   note: previously mapped to '%s' on line %d: %s",
+            item.source, item.line, item.directive,
+            existing_item.dest, existing_item.line, existing_item.directive)
     end
 end
 
@@ -182,9 +180,7 @@ local function lut_entries_from_directive(lut, directive, line_num)
     local flags, source, dest, annot = directive:match(
             "([-%+%?%!]*)(.-)%s*=>%s*([^@]*)(.*)")
     if source == nil or dest == nil then
-        print(string.format(
-            "WARNING: Ignoring invalid line %d: %s",
-            line_num, directive))
+        oops.warn("Ignoring invalid line %d: %s", line_num, directive)
         return nil
     end
 
@@ -198,9 +194,7 @@ local function lut_entries_from_directive(lut, directive, line_num)
     })
 
     if flags:match("%!") then
-        print(string.format(
-            "WARNING: Cut found on line %d, skipping rest of dictionary.",
-            line_num))
+        oops.warn("Cut found on line %d, skipping rest of dictionary.", line_num)
         return "cut"
     end
 

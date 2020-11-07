@@ -4,6 +4,7 @@ local inspect = require 'inspect'  -- DEBUG
 local annot_exec = require 'tersen.annot_exec'
 local hook_exec = require 'tersen.hook_exec'
 local lut_mod = require 'tersen.lut'
+local oops = require 'tersen.oops'
 local tersen_mod = require 'tersen.tersen'
 local trace_mod = require 'tersen.trace'
 local util = require 'tersen.util'
@@ -87,6 +88,9 @@ local function get_parser()
         "Re-fold paragraphs to the specified line width in columns. "
         .. "Only useful with -o.")
         :convert(tonumber)
+    parser:flag(
+        "-W --warnings-are-errors",
+        "Stop tersen prior to tersening anything if warnings are encountered.")
     return parser
 end
 
@@ -127,6 +131,12 @@ annot_exec.set_annot_file(args.annot)
 
 local lut = lut_mod.build_from_dict_file(args.tersen_dict)
 trace_mod.trace(lut)
+
+if args.warnings_are_errors and oops.num_warnings() > 0 then
+    print(oops.num_warnings()
+          .. " warnings encountered. Failing because --warnings-are-errors was set.")
+    os.exit(1)
+end
 
 for _, v in ipairs(args.files_to_tersen) do
     local f

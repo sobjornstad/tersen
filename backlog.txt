@@ -3,7 +3,6 @@
   - Only uppercases the first word
 * Correct casing not identified on contractions?
   Sentence-starters are still getting lowercase.
-* Improve warnings (print to stderr, give more details)
 * Frequency command-line interface is broken
 * Error handling for missing files
 
