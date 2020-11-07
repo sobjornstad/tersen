@@ -1,6 +1,8 @@
 .PHONY: all test
 
+TESTS = $(wildcard test/test_*.lua)
+
 all: test
 
-test:
-	busted -v test/test_util.lua
+test: $(TESTS)
+	busted -v $^
