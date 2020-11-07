@@ -3,6 +3,33 @@ local util = require 'tersen.util'
 local M = {}
 
 
+-- True if /s/ is a one-character string which is [aeiou].
+local function is_vowel(s)
+    return util.set{"a", "e", "i", "o", "u"}[s] ~= nil
+end
+
+
+function M.adj (source, dest, args)
+    local comparative, superlative
+    if args == nil then
+        if string.sub(source, -1, -1) == "e" then
+            comparative = source .. "r"
+            superlative = source .. "st"
+        else
+            comparative = source .. "er"
+            superlative = source .. "est"
+        end
+    else
+        comparative, superlative = table.unpack(args)
+    end
+    return {
+        [source] = dest,
+        [comparative] = "me" .. dest,
+        [superlative] = "my" .. dest,
+    }
+end
+
+
 local function pluralize_source (source, args)
     if args == nil then
         if string.sub(source, -1, -1) == "s" then
@@ -18,14 +45,47 @@ local function pluralize_source (source, args)
 end
 
 
--- To be applied to an acronym that is a noun and can be pluralized.
+function M.n (source, dest, args)
+    local plural = pluralize_source(source, args)
+    return {[source] = dest, [plural] = dest .. "z"}
+end
+
+
 function M.n_acro (source, dest, args)
     local plural = pluralize_source(source, args)
     return {[source] = dest, [plural] = dest .. "s"}
 end
 
 
--- Add entries using both straight and curly apostrophes.
+function M.v (source, dest, args)
+    local third, past, perfect, participle
+    if args == nil then
+        if is_vowel(source:sub(-1, -1)) then
+            past = source .. "d"
+            participle = source:sub(1, -2) .. "ing"
+        else
+            past = source .. "ed"
+            participle = source .. "ing"
+        end
+        perfect = past
+        third = source .. "s"
+    else
+        third, past, perfect, participle = table.unpack(args)
+    end
+
+    -- Place more fundamental forms last; if any keys are the same, the ones
+    -- that come last win. E.g., it seems less objectionable to have the present of
+    -- "run" used for the past participle than vice versa!
+    return {
+        [third] = dest,
+        [past] = "y" .. dest,
+        [perfect] = dest .. "d",
+        [participle] = "u" .. dest,
+        [source] = dest,
+    }
+end
+
+
 function M.apos (source, dest, args)
     local straight = string.gsub(source, "'", "’")
     local curly = string.gsub(source, "’", "'")
@@ -33,7 +93,6 @@ function M.apos (source, dest, args)
 end
 
 
--- Discard the source => dest pair and add entries for numbers 1-99.
 function M.numbers (source, dest, args)
     local ones  = {one = 1, two = 2, three = 3, four = 4, five = 5, six = 6,
                    seven = 7, eight = 8, nine = 9}

@@ -1,12 +1,12 @@
--- allow calling from parent directory if needed
-package.path = "./?.lua;tersen/?.lua;" .. package.path
-
 local argparse = require 'argparse'
 local inspect = require 'inspect'  -- DEBUG
-local lut_mod = require 'lut'
-local tersen_mod = require 'tersen'
-local trace_mod = require 'trace'
-local util = require 'util'
+
+local annot_exec = require 'tersen.annot_exec'
+local hook_exec = require 'tersen.hook_exec'
+local lut_mod = require 'tersen.lut'
+local tersen_mod = require 'tersen.tersen'
+local trace_mod = require 'tersen.trace'
+local util = require 'tersen.util'
 
 
 local function fold_paragraph(paragraph_str, cols)
@@ -68,25 +68,38 @@ local function get_parser()
         "files_to_tersen",
         "Text file(s) to be tersened; use - for stdin.")
         :args("+")
-    parser:flag(
-        "-w --width",
-        "Re-fold paragraphs to the specified line width in columns. "
-        .. "Only useful with -o.")
-        :args("1")
-        :convert(tonumber)
+    parser:option(
+        "-a --annot",
+        "Path to a file of annotations to be used instead of the default.")
     parser:flag(
         "-f --frequency",
         "Instead of tersening input, analyze what would have been tersened "
         .. "and print out the most frequently used words that don't have "
         .. "abbreviations. ")
+    parser:option(
+        "-h --hooks",
+        "Path to a file of hooks to be used instead of the default.")
     parser:flag(
         "-o --at-once",
         "Instead of reading a line at a time, read and process all input in a chunk.")
+    parser:option(
+        "-w --width",
+        "Re-fold paragraphs to the specified line width in columns. "
+        .. "Only useful with -o.")
+        :convert(tonumber)
     return parser
 end
 
 local parser = get_parser()
 local args = parser:parse()
+
+if args.hooks then
+    hook_exec.set_hook_file(args.hooks)
+end
+
+if args.annot then
+    annot_exec.set_annot_file(args.annot)
+end
 
 local lut = lut_mod.build_from_dict_file(args.tersen_dict)
 trace_mod.trace(lut)

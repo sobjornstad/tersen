@@ -1,7 +1,8 @@
-local case = require 'case'
-local hook = require 'hook_exec'
 local inspect = require 'inspect'
-local util = require 'util'
+
+local case = require 'tersen.case'
+local hook = require 'tersen.hook_exec'
+local util = require 'tersen.util'
 
 local M = {}
 

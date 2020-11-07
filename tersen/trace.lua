@@ -1,5 +1,6 @@
-local hook = require 'hook_exec'
 local inspect = require 'inspect'  -- DEBUG
+
+local hook = require 'tersen.hook_exec'
 
 local M = {}
 

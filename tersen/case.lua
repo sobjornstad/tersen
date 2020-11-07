@@ -1,5 +1,5 @@
-local hook = require 'hook_exec'
-local util = require 'util'
+local hook = require 'tersen.hook_exec'
+local util = require 'tersen.util'
 
 local M = {}
 

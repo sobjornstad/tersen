@@ -1,4 +1,4 @@
-local hooks = require 'extend/hooks'
+local hooks = require 'tersen.extend.hooks'
 
 local M = {}
 
@@ -69,6 +69,10 @@ function M.try_invoke(hook, ...)
     else
         return HookResult:from_failure()
     end
+end
+
+function M.set_hook_file(filename)
+    hooks = loadfile(filename)()
 end
 
 return M

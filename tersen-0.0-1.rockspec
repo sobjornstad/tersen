@@ -24,6 +24,7 @@ build = {
         },
     },
     modules = {
+        ["tersen.annot_exec"] = "tersen/annot_exec.lua",
         ["tersen.case"] = "tersen/case.lua",
         ["tersen.hook_exec"] = "tersen/hook_exec.lua",
         ["tersen.lut"] = "tersen/lut.lua",
