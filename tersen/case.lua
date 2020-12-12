@@ -4,7 +4,6 @@ local util = require 'tersen.util'
 local M = {}
 
 
--- TODO: Should these three functions handle control characters?
 -- A string is uppercase if it consists only of one or more capital letters,
 -- numbers, punctuation, and whitespace. Nil and the empty string are not
 -- uppercase.

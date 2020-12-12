@@ -1,5 +1,4 @@
 local argparse = require 'argparse'
-local inspect = require 'inspect'  -- DEBUG
 
 local annot_exec = require 'tersen.annot_exec'
 local hook_exec = require 'tersen.hook_exec'
@@ -105,7 +104,6 @@ local function get_parser()
     local parser = argparse {
         name = "tersen",
         description = "tersen - the fast, flexible abbreviation engine",
-        epilog = "Soren Bjornstad",
     }
     parser:argument(
         "tersen_dict",
@@ -154,7 +152,7 @@ local function get_args()
     local rc_args = nil
     if home ~= nil then
         rc_args = rc_args_from_file(home .. "/.tersenrc")
-    elseif homepath ~= nil then
+    elseif homepath ~= nil then  -- Windows
         rc_args = rc_args_from_file(home .. "\\.tersenrc")
     end
 
@@ -188,15 +186,3 @@ if args.frequency then
 else
     do_tersen(args, lut)
 end
-
-
----- Get an operation callable that takes (lut, text).
---local function get_callable(args)
---    if args.frequency then
---        return function(lut, text)
---            tersen_mod.print_unmatched_tokens(tersen_mod.unmatched_in_corpus(lut, text))
---        end
---    else
---        return tersen_mod.tersen
---    end
---end

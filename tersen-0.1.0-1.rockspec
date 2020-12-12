@@ -1,15 +1,22 @@
+rockspec_format = "3.0"
 package = "tersen"
-version = "0.0-1"
+version = "0.1.0-1"
 source = {
     url = "...",
 }
 description = {
     summary = "Fast, flexible, small abbreviation engine",
     detailed = [[
-        I am tersen.
+        Tersen is an abbreviation engine that compresses text in a
+        human-readable fashion. Abbreviations are user-specifiable
+        through a dictionary of textual mappings, and more complex behavior
+        can be obtained through small snippets of Lua code attached to
+        extensibility points called hooks and annotations.
     ]],
-    homepage = "...",
-    license = "...",
+    homepage = "https://github.com/sobjornstad/tersen/",
+    issues_url = "https://github.com/sobjornstad/tersen/issues/",
+    labels = {"commandline"},
+    license = "MIT",
 }
 dependencies = {
     "lua >= 5.3, < 5.5",

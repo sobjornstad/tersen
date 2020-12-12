@@ -1,3 +1,9 @@
+Before release:
+
+* "source" field needs to be filled in in the rockspec
+* 'tersenrc' should be documented
+* Explain how to create annotations/hook files
+
 Misc:
 
 * Unicode normalization?

@@ -1,4 +1,4 @@
-local inspect = require 'inspect'  -- DEBUG
+local inspect = require 'inspect'
 
 local hook = require 'tersen.hook_exec'
 local oops = require 'tersen.oops'

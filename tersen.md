@@ -2,9 +2,10 @@
 
 **Tersen** is an abbreviation engine
     that compresses text in a human-readable fashion.
-Abbreviations are entirely user-specifiable,
-    through a dictionary of textual mappings (e.g., `and` becomes `&`)
-    and optionally dead-simple Lua functions called
+Abbreviations are entirely user-specifiable
+    through a dictionary of textual mappings (e.g., `and` becomes `&`).
+More concise dictionary files and custom abbreviation behavior
+    can be obtained by writing Lua functions called
     *annotations* (which pre-process lines in the abbreviation dictionary)
     and *hooks* (which alter tersen's behavior as it abbreviates a text).
 
@@ -227,8 +228,7 @@ When replacing a match,
   and the output will always be all-caps.
 * If the matched text itself was all-caps, its tersened output will be as well.
 * If the matched text was title case,
-  its tersened output will have its first character capitalized.
-  (TODO: Would be nice to make this proper title case.)
+  its tersened output will be in title case.
 * Otherwise, the output will be whatever case the replacement is.
 
 Though these rules are not always perfect,
