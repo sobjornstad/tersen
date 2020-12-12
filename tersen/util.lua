@@ -1,3 +1,5 @@
+local oops = require 'tersen.oops'
+
 local M = {}
 
 
@@ -76,6 +78,16 @@ function M.set(lst)
     end
     return S
 end
+
+
+function M.try_open_file(filename)
+    local f = io.open(filename)
+    if f == nil then
+        oops.die(1, "File not found: %s", filename)
+    end
+    return f
+end
+
 
 
 return M

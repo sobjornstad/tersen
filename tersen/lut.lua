@@ -208,7 +208,7 @@ function M.build_from_dict_file(filename)
     local lut = {}
     local line_num = 1
 
-    local f = io.open(filename)
+    local f = util.try_open_file(filename)
     for directive in f:lines() do
         if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
             local result = lut_entries_from_directive(lut, directive, line_num)

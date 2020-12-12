@@ -4,7 +4,6 @@
 * Correct casing not identified on contractions?
   Sentence-starters are still getting lowercase.
 * Frequency command-line interface is broken
-* Error handling for missing files
 
 Maybe:
 

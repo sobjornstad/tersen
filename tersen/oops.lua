@@ -9,6 +9,16 @@ function M.warn(msg, ...)
 end
 
 
+function M.die(err_code, msg, ...)
+    if err_code == nil then
+        err_code = 1
+    end
+    local formatted = string.format(msg, ...)
+    io.stderr:write("ERROR: " .. formatted .. "\n")
+    os.exit(err_code)
+end
+
+
 function M.num_warnings()
     local num = 0
     for _, __ in pairs(M.warnings) do

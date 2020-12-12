@@ -143,7 +143,7 @@ for _, v in ipairs(args.files_to_tersen) do
     if v == '-' then
         f = io.stdin
     else
-        f = io.open(v)
+        f = util.try_open_file(v)
     end
 
     if args.at_once then
