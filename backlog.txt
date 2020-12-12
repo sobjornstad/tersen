@@ -3,7 +3,6 @@
   - Only uppercases the first word
 * Correct casing not identified on contractions?
   Sentence-starters are still getting lowercase.
-* Frequency command-line interface is broken
 
 Maybe:
 

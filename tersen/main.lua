@@ -44,14 +44,59 @@ local function refold(str, cols)
 end
 
 
--- Get an operation callable that takes (lut, text).
-local function get_callable(args)
-    if args.frequency then
-        return function(lut, text)
-            tersen_mod.print_unmatched_tokens(tersen_mod.unmatched_in_corpus(lut, text))
+local function iterfiles(file_list)
+    local total_length = #file_list
+    local cur_index = 0
+    local f = nil
+
+    return function()
+        -- close any file left open by the previous iteration
+        if f ~= nil and f ~= io.stdin then
+            f:close()
         end
-    else
-        return tersen_mod.tersen
+
+        -- end condition
+        cur_index = cur_index + 1
+        if cur_index > total_length then
+            return nil
+        end
+
+        local cur_filename = file_list[cur_index]
+        if cur_filename == '-' then
+            f = io.stdin
+        else
+            f = util.try_open_file(cur_filename)
+        end
+
+        return f
+    end
+end
+
+
+local function do_frequency(args, lut)
+    for f in iterfiles(args.files_to_tersen) do
+        local text = f:read("*a")
+        tersen_mod.print_unmatched_tokens(tersen_mod.unmatched_in_corpus(lut, text))
+    end
+end
+
+
+local function do_tersen(args, lut)
+    for f in iterfiles(args.files_to_tersen) do
+        if args.at_once then
+            local text = f:read("*a")
+            local res = tersen_mod.tersen(lut, text)
+            if args.width ~= nil then
+                print(refold(res, args.width))
+            else
+                print(res)
+            end
+        else
+            for line in f:lines() do
+                local text = tersen_mod.tersen(lut, line) -- also returns stats
+                print(text)
+            end
+        end
     end
 end
 
@@ -76,7 +121,7 @@ local function get_parser()
         "-f --frequency",
         "Instead of tersening input, analyze what would have been tersened "
         .. "and print out the most frequently used words that don't have "
-        .. "abbreviations. ")
+        .. "abbreviations. Implies -o, invalid with -w.")
     parser:option(
         "-h --hooks",
         "Path to a file of hooks to be used instead of the default.")
@@ -138,30 +183,20 @@ if args.warnings_are_errors and oops.num_warnings() > 0 then
     os.exit(1)
 end
 
-for _, v in ipairs(args.files_to_tersen) do
-    local f
-    if v == '-' then
-        f = io.stdin
-    else
-        f = util.try_open_file(v)
-    end
-
-    if args.at_once then
-        local text = f:read("*a")
-        local res = get_callable(args)(lut, text)
-        if args.width ~= nil then
-            print(refold(res, args.width))
-        else
-            print(res)
-        end
-    else
-        for line in f:lines() do
-            local res = get_callable(args)(lut, line)
-            print(res)
-        end
-    end
-
-    if f ~= io.stdin then
-        f:close()
-    end
+if args.frequency then
+    do_frequency(args, lut)
+else
+    do_tersen(args, lut)
 end
+
+
+---- Get an operation callable that takes (lut, text).
+--local function get_callable(args)
+--    if args.frequency then
+--        return function(lut, text)
+--            tersen_mod.print_unmatched_tokens(tersen_mod.unmatched_in_corpus(lut, text))
+--        end
+--    else
+--        return tersen_mod.tersen
+--    end
+--end
