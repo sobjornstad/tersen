@@ -1,8 +1,11 @@
-Maybe:
+Misc:
 
 * Unicode normalization?
 * Allow applying multiple annotations to one item (they would be cascaded through)
   (If someone really needed this, they could write a function that did it!)
+
+Webtersen:
+
 * Enable webtersen to work with arbitrary hooks and annotations.
   The fengari-web interop (https://github.com/fengari-lua/fengari-web) has a load() function
   that should be able to load arbitrary Lua source and return it as a function...although
