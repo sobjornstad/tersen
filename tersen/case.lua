@@ -39,6 +39,29 @@ function M.is_title(str)
 end
 
 
+-- To convert a string to title case, uppercase the first letter in every word,
+-- a word consisting of a consecutive run of letters.
+function M.to_title(str)
+    local in_word = false
+    local new_chars = {}
+
+    for i = 1, #str do
+        local c = str:sub(i, i)
+        if c:match("%a") then
+            if not in_word then
+                c = c:upper()
+            end
+            in_word = true
+        else
+            in_word = false
+        end
+        table.insert(new_chars, c)
+    end
+
+    return table.concat(new_chars, "")
+end
+
+
 -- Standard behavior of normalize_case. May be overridden by a hook.
 local function default_normalize_case(new_word, original_word)
     if util.is_nil_or_whitespace(new_word) then
@@ -46,21 +69,14 @@ local function default_normalize_case(new_word, original_word)
         return new_word
 
     elseif M.is_upper(original_word) or M.is_upper(new_word) then
-        -- If the original word is uppercase OR the replacement is uppercase
-        -- (indicating the replacement is an acronym), use uppercase.
+        -- If the original word is all uppercase OR the replacement is all uppercase
+        -- (suggesting the replacement is an acronym), use uppercase.
         return string.upper(new_word)
 
     elseif M.is_title(original_word) then
         -- Otherwise, if the original word is title case, presumably because it
         -- was at the start of a sentence or part of a name, use title case.
-        local initial, first_alnum, final = new_word:match("^(.-)(%w)(.*)$")
-        if first_alnum == nil then
-            -- Special case: no alphanumeric characters at all in replacement.
-            -- Just return the replacement.
-            return new_word
-        else
-            return initial .. first_alnum:upper() .. final
-        end
+        return M.to_title(new_word)
 
     else
         -- In all other situations, use the case of the replacement.

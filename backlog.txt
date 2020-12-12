@@ -1,6 +1,3 @@
-* Title case conversion isn't really done:
-  - Doesn't work if the word starts with punctuation
-  - Only uppercases the first word
 * Correct casing not identified on contractions?
   Sentence-starters are still getting lowercase.
 
