@@ -21,17 +21,17 @@ function M.is_lower(str)
 end
 
 
--- A string is title-case if it consists of numbers, punctuation, and
--- whitespace separated by runs of alphanumeric characters where the first
--- alphanumeric character is uppercase and the rest are lowercase. Nil
--- and the empty string are not title-case.
+-- A string is title-case if it consists of runs of alphanumeric characters/apostrophes
+-- where the first character is uppercase and the rest are not; the runs may be
+-- separated by any other characters. Nil and the empty string are not title-case.
 function M.is_title(str)
     if str == nil or #str == 0 then
         return false
     end
 
-    for alnum_run in str:gmatch("[^%d%p%s]*") do
-        if not util.is_nil_or_whitespace(alnum_run) and alnum_run:match("^%u%l*$") == nil then
+    for alnum_run in str:gmatch("[%w'’]*") do
+        if not util.is_nil_or_whitespace(alnum_run)
+          and alnum_run:match("^%u[%l%d'’]*$") == nil then
             return false
         end
     end
@@ -40,14 +40,15 @@ end
 
 
 -- To convert a string to title case, uppercase the first letter in every word,
--- a word consisting of a consecutive run of letters.
+-- a word consisting of a consecutive run of letters, hyphens, underscores,
+-- or apostrophes.
 function M.to_title(str)
     local in_word = false
     local new_chars = {}
 
     for i = 1, #str do
         local c = str:sub(i, i)
-        if c:match("%a") then
+        if c:match("[-_'’%a]") then
             if not in_word then
                 c = c:upper()
             end

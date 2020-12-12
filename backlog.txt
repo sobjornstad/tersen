@@ -1,6 +1,3 @@
-* Correct casing not identified on contractions?
-  Sentence-starters are still getting lowercase.
-
 Maybe:
 
 * Unicode normalization?
