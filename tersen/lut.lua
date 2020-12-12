@@ -126,7 +126,7 @@ local function new_mapping(lut, item)
     handle_longer_destination(item)
     local existing_item = lut[item.source:lower()]
 
-    -- Check for conflicts and decide what to do.
+    -- Check for conflicts and return early if appropriate.
     if existing_item ~= nil and existing_item.dest ~= nil then
         local do_remap = hook.try_invoke("mapping_conflicts", item, existing_item)
             :or_return(nil)

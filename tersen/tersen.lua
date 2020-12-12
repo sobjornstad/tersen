@@ -96,9 +96,7 @@ function M.print_unmatched_tokens(unmatched_frequency_table)
     end
     table.sort(token_mapping, function (left, right) return left[2] > right[2] end)
 
-    print("Unmatched tokens:")
     for index, pair in ipairs(token_mapping) do
-        if index > 100 then break end
         print(string.format("%d\t%s", pair[2], pair[1]))
     end
 end
