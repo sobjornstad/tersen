@@ -203,44 +203,51 @@ local function lut_entries_from_directive(lut, directive, line_num)
 end
 
 
+-- Given an iterator of directive lines as text in tersen dictionary format,
+-- build the lines into a lookup table, allow a hook to modify the table,
+-- and return it.
+local function build(directive_lines)
+    local lut = {}
+    local line_num = 1
+
+    for directive in directive_lines() do
+        if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
+            local result = lut_entries_from_directive(lut, directive, line_num)
+            if result == "cut" then
+                break
+            end
+        end
+        line_num = line_num + 1
+    end
+
+    return hook.try_invoke("post_build_lut", lut)
+        :or_return(lut)
+end
+
+
 -- Given the path to a file containing a tersen dictionary,
 -- build and return a tersen lookup table.
 function M.build_from_dict_file(filename)
-    local lut = {}
-    local line_num = 1
-
-    local f = util.try_open_file(filename)
-    for directive in f:lines() do
-        if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
-            local result = lut_entries_from_directive(lut, directive, line_num)
-            if result == "cut" then
-                break
+    return build(function()
+        local f = util.try_open_file(filename)
+        local lines_iterator = f:lines()
+        return function()
+            local value = lines_iterator()
+            if value == nil then
+                f:close()
+                return nil
+            else
+                return value
             end
         end
-        line_num = line_num + 1
-    end
-    f:close()
-
-    return hook.try_invoke("post_build_lut", lut)
-        :or_return(lut)
+    end)
 end
 
+
+-- Like build_from_dict_file, but using a string.
 function M.build_from_string(str)
-    local lut = {}
-    local line_num = 1
-
-    for directive in str:gmatch("[^\n]*") do
-        if not util.is_nil_or_whitespace(directive) and not is_comment(directive) then
-            local result = lut_entries_from_directive(lut, directive, line_num)
-            if result == "cut" then
-                break
-            end
-        end
-        line_num = line_num + 1
-    end
-
-    return hook.try_invoke("post_build_lut", lut)
-        :or_return(lut)
+    return build(function() return str:gmatch("[^\n]*") end)
 end
+
 
 return M
