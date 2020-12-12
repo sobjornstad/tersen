@@ -1,8 +1,11 @@
+package.path = "../?.lua;../webtersen/?.lua;" .. package.path
+print("LUA MODULES:\n",(package.path:gsub("%;","\n\t")))
+
 local js = require "js"
 local window = js.global
-local lut_mod = require 'lut'
-local trace_mod = require 'trace'
-local tersen_mod = require 'tersen'
+local lut_mod = require 'tersen.lut'
+local trace_mod = require 'tersen.trace'
+local tersen_mod = require 'tersen.tersen'
 
 local function elem(name)
     return window.document:getElementById(name)
