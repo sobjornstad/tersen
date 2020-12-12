@@ -40,7 +40,7 @@ Each outer token has an associated *inner token*,
     and ending at the first non-inner-token character.
 Inner-token characters are the alphanumeric characters in your system locale,
      `-`, `'`, and `’`.
-The portions of an outer token that is not part of the inner token
+The portions of an outer token that are not part of the inner token
     are the *initial* and *final* portions,
     or, together, the *token perimeter*.
 
@@ -110,13 +110,15 @@ This behavior can be customized via the `mapping_conflicts` hook,
 
 ### Destinations
 
-A destination may be any string,
+A destination may be any string containing any characters,
     including whitespace and punctuation,
-    with the sole exception of the at-sign (`@`),
-    which indicates where the destination ends and the annotations start.
-Leading and trailing whitespace are ignored.
+    with the sole exception of the newline and the at-sign (`@`),
+    which both indicate the end of the destination string
+    (the at-sign additionally applies annotations).
+Leading and trailing whitespace in the destination string are ignored.
 
-If a destination is longer than its corresponding source,
+If a destination is longer (consists of more characters)
+    than its corresponding source,
     tersen will print a warning but still use the mapping.
 This behavior can be customized via the `mapping_verbosens_text` hook.
 
@@ -183,7 +185,7 @@ The simplest kind of dictionary line looks like this:
 
 This creates a mapping that will replace `source` with `destination` in output.
 
-Oftentimes you want to map several sources to the same destination.
+You may want to map several sources to the same destination.
 You can do this by separating them with commas:
 
     source1, source2 => destination
