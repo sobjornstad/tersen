@@ -9,6 +9,11 @@ function M.warn(msg, ...)
 end
 
 
+function M.warn_source(line, msg, ...)
+    return M.warn("line %d: " .. msg, line, ...)
+end
+
+
 function M.die(err_code, msg, ...)
     if err_code == nil then
         err_code = 1

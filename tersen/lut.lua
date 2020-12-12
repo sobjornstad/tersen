@@ -13,9 +13,10 @@ local function handle_longer_destination(item)
         local new_source, new_dest = hook
             .try_invoke("mapping_verbosens_text", item.source, item.dest, item)
             :or_execute(function()
-                oops.warn(
-                    "Destination '%s' is longer than source '%s' on line %d: %s",
-                    item.dest, item.source, item.line, item.directive)
+                oops.warn_source(
+                    item.line,
+                    "Destination '%s' is longer than source '%s'.",
+                    item.dest, item.source, item.directive)
                 return item.source, item.dest
             end)
         if new_source == nil or new_dest == nil then
@@ -33,12 +34,12 @@ local function source_parts(item)
     local elts = {}
     for i in string.gmatch(item.source, "[^,]*") do
         if i == nil then
-            oops.warn("Invalid source directive on line %d: %s", item.line, item.source)
+            oops.warn_source(item.line, "Invalid source directive %s", item.source)
         elseif not string.match(i, "^%s*[-'’%w%s]+%s*$") then
-            oops.warn(
-                "Source directive is not alphanumeric on line %d "
-                .. "and will be ignored: %s",
-                item.line, item.source)
+            oops.warn_source(
+                item.line,
+                "Source directive is not alphanumeric and will be ignored: '%s'",
+                item.source)
         else
             table.insert(elts, util.trim(i))
         end
