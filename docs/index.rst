@@ -18,14 +18,21 @@ Use cases for tersen include:
 * Practicing your reading skills in your favorite alphabetic shorthand system.
 
 Tersen is written and extended in `Lua`_.
+It uses the MIT license.
+You can install it using `LuaRocks`_:
+::
+
+    $ luarocks install tersen
 
 .. _Lua: http://lua.org/
+.. _LuaRocks: http://luarocks.org/
 
 
 .. toctree::
    :maxdepth: 3
    :caption: Contents
 
+   qstart
    terms-and-concepts
    dictionary
    annotations
