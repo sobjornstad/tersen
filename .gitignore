@@ -1,2 +1,4 @@
 twistd.*
 *.log
+docs/_build/
+__pycache__/
