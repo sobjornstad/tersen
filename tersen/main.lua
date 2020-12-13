@@ -105,35 +105,51 @@ local function get_parser()
         name = "tersen",
         description = "tersen - the fast, flexible abbreviation engine",
     }
-    parser:argument(
-        "tersen_dict",
-        "Path to the tersen dictionary containing abbreviation mappings.")
-    parser:argument(
-        "files_to_tersen",
-        "Text file(s) to be tersened; use - for stdin.")
-        :args("+")
-    parser:option(
-        "-a --annot",
-        "Path to a file of annotations to be used instead of the default.")
-    parser:flag(
-        "-f --frequency",
-        "Instead of tersening input, analyze what would have been tersened "
-        .. "and print out the most frequently used words that don't have "
-        .. "abbreviations. Implies -o, invalid with -w.")
-    parser:option(
-        "-h --hooks",
-        "Path to a file of hooks to be used instead of the default.")
-    parser:flag(
-        "-o --at-once",
-        "Instead of reading a line at a time, read and process all input in a chunk.")
-    parser:option(
-        "-w --width",
-        "Re-fold paragraphs to the specified line width in columns. "
-        .. "Only useful with -o.")
-        :convert(tonumber)
-    parser:flag(
-        "-W --warnings-are-errors",
-        "Stop tersen prior to tersening anything if warnings are encountered.")
+    parser:help_max_width(80)
+
+    parser:group("Files",
+        parser:argument(
+            "tersen_dict",
+            "Path to the tersen dictionary containing abbreviation mappings."),
+        parser:argument(
+            "files_to_tersen",
+            "Text file(s) to be tersened; use - for stdin.")
+            :args("+"),
+        parser:option(
+            "-a --annot",
+            "Path to a file of annotations to be used instead of the default."),
+        parser:option(
+            "-h --hooks",
+            "Path to a file of hooks to be used instead of the default.")
+    )
+
+    parser:group("Output format",
+        parser:flag(
+            "-f --frequency",
+            "Instead of tersening input, analyze what would have been tersened "
+            .. "and print out the most frequently used words that don't have "
+            .. "abbreviations. Implies -o, invalid with -w."),
+        parser:flag(
+            "-o --at-once",
+            "Instead of reading a line at a time, "
+            .. "read and process all input in a chunk."),
+        parser:option(
+            "-w --width",
+            "Re-fold paragraphs to the specified line width in columns. "
+            .. "Only useful with -o.")
+            :convert(tonumber)
+    )
+
+    parser:group("Configuration",
+        parser:flag(
+            "--no-rcfile",
+            "Do not read any command-line arguments from ~/.tersenrc. "),
+        parser:flag(
+            "-W --warnings-are-errors",
+            "Stop tersen prior to tersening anything if warnings are encountered "
+            .. "while reading the dictionary, annotations, and hooks files.")
+    )
+
     return parser
 end
 
@@ -168,6 +184,9 @@ end
 
 local parser = get_parser()
 local args = parser:parse(get_args())
+if args.no_rcfile then
+    args = parser:parse(arg)
+end
 
 hook_exec.set_hook_file(args.hooks)
 annot_exec.set_annot_file(args.annot)
