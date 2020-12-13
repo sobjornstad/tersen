@@ -17,11 +17,11 @@ are mentioned throughout this manual.
 If you find there is no hook present for an aspect of behavior you need to change,
 pull requests adding such a hook are welcome.
 
-To get started, grab a copy of the ``hooks.lua``,
+To get started, `grab a copy`_ of the ``hooks.lua``,
 which has commented-out stub implementations and extensive comments
 on all the available hooks.
 When you run tersen, supply the ``-h hookfile`` argument.
 If you don't want to type this every time you run tersen,
 :ref:`set up <tersenrc>` a ``.tersenrc``.
 
-.. todo:: GitHub link
+.. _grab a copy: https://github.com/sobjornstad/tersen/blob/master/tersen/extend/hooks.lua

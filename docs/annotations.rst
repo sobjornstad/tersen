@@ -74,14 +74,13 @@ and may contain lowercase letters, numbers, and underscores
 so if you use uppercase in your name it will be impossible to call it).
 
 If you want to add your own annotations, you should
-start from a copy of this file,
+start from a `copy of this file`_,
 putting it somewhere convenient
 and telling tersen to use it with the ``-a annotationfile`` argument at runtime.
 If you don't want to type this every time you run tersen,
 :ref:`set up <tersenrc>` a ``.tersenrc``.
 
-.. todo::
-    Provide a GitHub link
+.. _copy of this file: https://github.com/sobjornstad/tersen/blob/master/tersen/extend/annot.lua
 
 
 Function details
