@@ -39,5 +39,5 @@ In either case, ``tersen`` will then be installed on your system path.
 
 ## Documentation
 
-Complete documentation can be found on Read the Docs (TODO link).
-A quick-start guide is included (TODO link).
+Complete documentation can be found [on Read the Docs](https://tersen.readthedocs.io/en/latest/index.html)
+A [quick-start guide](https://tersen.readthedocs.io/en/latest/qstart.html) is included.
