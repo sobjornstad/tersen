@@ -2,7 +2,8 @@ rockspec_format = "3.0"
 package = "tersen"
 version = "0.1.0-1"
 source = {
-    url = "...",
+    url = "git+https://github.com/sobjornstad/tersen/",
+    tag = "v0.1.0",
 }
 description = {
     summary = "Fast, flexible, small abbreviation engine",
