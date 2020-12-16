@@ -169,7 +169,7 @@ local function get_args()
     if home ~= nil then
         rc_args = rc_args_from_file(home .. "/.tersenrc")
     elseif homepath ~= nil then  -- Windows
-        rc_args = rc_args_from_file(home .. "\\.tersenrc")
+        rc_args = rc_args_from_file(homepath .. "\\.tersenrc")
     end
 
     local complete_args = {}
